@@ -1,0 +1,42 @@
+# Core ML and Data
+numpy==1.23.5
+pandas
+scikit-learn
+joblib
+tensorflow
+keras
+
+# Technical Analysis
+pandas-ta
+
+# Crypto & Market Data
+ccxt
+
+# Sentiment & NLP
+tweepy
+textblob
+vaderSentiment
+transformers
+torch
+datasets
+
+# Reddit (optional for future use)
+praw
+
+# Utility
+schedule
+python-dotenv
+matplotlib
+
+# Optional: For logging and advanced scheduling
+loguru
+
+# Web and API
+fastapi
+uvicorn
+
+# Telegram Bot
+python-telegram-bot==13.15
+
+# ML experiment tracking
+mlflow>=2.0.0

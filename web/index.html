@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Crypto Futures ML Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #eee;
+      text-align: center;
+      padding-top: 40px;
+    }
+    button {
+      padding: 12px 25px;
+      font-size: 18px;
+      background: #1db954;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1ed760;
+    }
+    .stats {
+      margin-top: 30px;
+      font-size: 18px;
+      color: #ccc;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🤖 Crypto Futures ML</h1>
+  <p>Click below to get the latest signal + view dashboard</p>
+
+  <button onclick="getPrediction()">📈 Predict Now</button>
+
+  <div id="result"></div>
+  <div class="stats" id="dashboard"></div>
+
+  <script>
+    async function getPrediction() {
+      document.getElementById("result").innerText = "🔄 Predicting...";
+      try {
+        const res = await fetch("http://localhost:8000/predict");
+        const data = await res.json();
+        document.getElementById("result").innerHTML = `✅ Signal: <b>${data.signal}</b><br>⚡ Confidence: <b>${(data.confidence * 100).toFixed(2)}%</b>`;
+        getDashboard();
+      } catch (err) {
+        document.getElementById("result").innerText = "❌ Prediction failed.";
+      }
+    }
+
+    async function getDashboard() {
+      try {
+        const res = await fetch("http://localhost:8000/dashboard-data");
+        const data = await res.json();
+        document.getElementById("dashboard").innerHTML = `
+          🧠 Position: <b>${data.last_signal}</b> | Open: ${data.is_open}<br>
+          💰 Balance: $${data.balance}<br>
+          📉 Last PnL: ${data.last_pnl || 0}%<br>
+          ⏳ Cooldown Until: ${data.cooldown_until}
+        `;
+      } catch (err) {
+        document.getElementById("dashboard").innerText = "⚠️ Failed to load dashboard data.";
+      }
+    }
+
+    getDashboard();
+  </script>
+
+</body>
+</html>

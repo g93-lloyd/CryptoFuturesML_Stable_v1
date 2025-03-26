@@ -1,0 +1,38 @@
+# Use a lightweight Python base image
+FROM python:3.10-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    gcc \
+    libffi-dev \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
+# Copy all project files
+COPY . .
+
+# Set environment variable for Python
+ENV PYTHONUNBUFFERED=1
+
+# Default command to run main CLI or scheduler
+# Uncomment one depending on your use case
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# CMD ["python", "job_scheduler.py"]
+
+#docker build -t crypto-ml-api .
+#docker run --env-file .env -p 8000:8000 crypto-ml-api
+
+#Local Development:
+    #uvicorn api.main:app --reload
+    #Then visit:  
+    #http://127.0.0.1:8000/ → Health check
+    #http://127.0.0.1:8000/predict → Get live model signal

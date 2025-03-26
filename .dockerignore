@@ -1,0 +1,25 @@
+__pycache__/
+*.py[cod]
+*.log
+*.tmp
+.ipynb_checkpoints
+.env
+models/
+logs/
+.vscode/
+.env.*
+*.h5
+*.save
+*.csv
+🧪 3. Build and Run Instructions
+✅ Build Docker Image
+In your terminal from the project root:
+docker build -t crypto-ml-bot .
+
+▶️ Run Container (Main CLI)
+docker run --env-file .env -it crypto-ml-bot
+
+🕒 Run Container (Scheduler in Background)
+docker run --env-file .env -d crypto-ml-bot python job_scheduler.py
+🔐 The --env-file .env flag ensures all your API keys and tokens are injected securely at runtime.
+
