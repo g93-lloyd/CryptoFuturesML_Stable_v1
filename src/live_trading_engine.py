@@ -42,7 +42,7 @@ def predict_and_trade(return_result=False):
         # Load model and scaler
         model_path = get_latest_model_path()
         scaler_path = get_latest_scaler_path()
-        model = load_model(model_path)
+        model = load_model("models/lstm_model.keras")
         scaler = joblib.load(scaler_path)
 
         # Fetch market data and compute features

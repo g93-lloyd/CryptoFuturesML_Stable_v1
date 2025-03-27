@@ -7,7 +7,7 @@ from keras.layers import LSTM, Dense
 from keras.callbacks import EarlyStopping
 import joblib
 
-# 🧠 Convert time-series DataFrame into LSTM input format and return fitted scaler
+# Prepares LSTM-compatible dataset
 def prepare_data(df, feature_cols, target_col='close', window_size=10):
     df = df.dropna().reset_index(drop=True)
     df['target'] = (df[target_col].shift(-1) > df[target_col]).astype(int)
@@ -25,39 +25,29 @@ def prepare_data(df, feature_cols, target_col='close', window_size=10):
 
     return np.array(X), np.array(y), scaler
 
-# ✅ Only returns the trained model
+# Trains and returns the model
 def train_lstm_model(X, y):
     model = Sequential()
     model.add(LSTM(64, input_shape=(X.shape[1], X.shape[2])))
     model.add(Dense(1, activation='sigmoid'))
 
-    model.compile(
-        optimizer='adam',
-        loss='binary_crossentropy',
-        metrics=['accuracy']
-    )
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
-    early_stop = EarlyStopping(
-        monitor='val_loss',
-        patience=3,
-        restore_best_weights=True
-    )
+    early_stop = EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)
 
     model.fit(
-        X,
-        y,
+        X, y,
         epochs=50,
         batch_size=32,
         validation_split=0.2,
         callbacks=[early_stop]
     )
 
-    return model  # ❗ No scaler returned here
+    return model
 
-# Saves model and scaler to disk
+# Saves model in .keras format
 def save_model(model, scaler, model_path, scaler_path):
-    model.save(model_path, save_format="keras")  # or just omit save_format
-    import joblib
+    model.save(model_path)  # Now saves as .keras format
     joblib.dump(scaler, scaler_path)
     print(f"✅ Model saved: {model_path}")
     print(f"✅ Scaler saved: {scaler_path}")

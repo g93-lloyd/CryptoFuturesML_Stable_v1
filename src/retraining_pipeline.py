@@ -36,10 +36,10 @@ def retrain_pipeline(versioned=False):
         # ✅ scaler is already defined from prepare_data()
         if versioned:
             model_time = datetime.now().strftime("%Y-%m-%d_%H-%M")
-            model_path = f"models/lstm_model_{model_time}.h5"
+            model_path = f"models/lstm_model_{model_time}.keras"
             scaler_path = f"models/scaler_{model_time}.save"
         else:
-            model_path = "models/lstm_model.h5"
+            model_path = "models/lstm_model.keras"
             scaler_path = "models/scaler.save"
 
         print("💾 Saving model and scaler...")
