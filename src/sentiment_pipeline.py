@@ -5,19 +5,19 @@ import tweepy
 from textblob import TextBlob
 
 # Twitter API credentials from .env config
-from config import TWITTER_BEARER_TOKEN
+from src.config import TWITTER_BEARER_TOKEN
 
 # Custom retry decorator (retries on failure)
 from src.utils import retry
 
 # ⏳ Fetches recent tweets and returns average sentiment score
 @retry(max_attempts=3, delay=2, backoff=2)
-def fetch_twitter_sentiment(query="bitcoin OR BTC", max_results=10):
+def fetch_twitter_sentiment(limit=10, query="bitcoin OR BTC"):
     # Setup Tweepy client using bearer token
     client = tweepy.Client(bearer_token=TWITTER_BEARER_TOKEN)
 
     # Call Twitter API (v2) to get recent tweets
-    response = client.search_recent_tweets(query=query, max_results=max_results)
+    response = client.search_recent_tweets(query=query, max_results=limit)
     sentiments = []
 
     # If data is returned, process each tweet

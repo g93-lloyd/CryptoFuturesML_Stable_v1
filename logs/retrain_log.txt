@@ -1,0 +1,4 @@
+[2025-03-27 02:26:04] ❌ Retraining failed: cannot unpack non-iterable Sequential object
+[2025-03-27 02:31:07] ❌ Retraining failed: 429 Too Many Requests
+Too Many Requests
+[2025-03-27 07:10:57] ❌ Retraining failed: 'mae'
