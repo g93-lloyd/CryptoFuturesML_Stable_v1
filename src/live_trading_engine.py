@@ -48,7 +48,7 @@ def predict_and_trade(return_result=False):
         # Fetch market data and compute features
         df = fetch_ohlcv("BTC/USDT", limit=100)
         df = add_technical_indicators(df)  # Adds RSI, EMA, MACD, etc.
-        sentiment = fetch_twitter_sentiment(limit=20)  # Get sentiment scores
+        sentiment = fetch_twitter_sentiment()  # Get sentiment scores
         df = merge_sentiment(df, sentiment)  # Add sentiment to feature set
 
         df = df.dropna().reset_index(drop=True)
