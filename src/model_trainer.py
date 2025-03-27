@@ -53,3 +53,11 @@ def train_lstm_model(X, y):
     )
 
     return model  # ❗ No scaler returned here
+
+# Saves model and scaler to disk
+def save_model(model, scaler, model_path, scaler_path):
+    model.save(model_path)
+    import joblib
+    joblib.dump(scaler, scaler_path)
+    print(f"✅ Model saved: {model_path}")
+    print(f"✅ Scaler saved: {scaler_path}")
