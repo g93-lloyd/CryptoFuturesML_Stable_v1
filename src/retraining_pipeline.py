@@ -74,7 +74,7 @@ def retrain_pipeline(versioned=False):
                 },
                 metrics={
                     "train_loss": model.history.history['loss'][-1],
-                    "train_mae": model.history.history['mae'][-1]
+                    "train_accuracy": model.history.history['accuracy'][-1]
                 }
             )
             log_artifacts(model_path, scaler_path)
