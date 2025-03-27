@@ -39,11 +39,12 @@ def retrain_pipeline(versioned=False):
         features = ['rsi_14', 'ema_21', 'macd', 'sentiment']
         target_col = 'close'
         window_size = 10
-        X, y, fitted_scaler = prepare_data(df, feature_cols=features, target_col=target_col, window_size=window_size)
+        X, y, scaler = prepare_data(df, feature_cols=features, target_col=target_col, window_size=window_size)
 
         # Step 5: Train the LSTM model on the processed features
         print("🎯 Training LSTM model...")
         model = train_lstm_model(X, y)
+
         # Step 6: Decide where to save the model (versioned or overwrite)
         if versioned:
             model_time = datetime.now().strftime("%Y-%m-%d_%H-%M")
@@ -55,7 +56,7 @@ def retrain_pipeline(versioned=False):
 
         # Step 7: Save trained model and scaler
         print("💾 Saving model and scaler...")
-        save_model(model, fitted_scaler, model_path, scaler_path)
+        save_model(model, scaler, model_path, scaler_path)
 
         # Step 8: Update active model tracker
         with open("models/model_latest_path.txt", "w") as f:
@@ -95,3 +96,4 @@ def retrain_pipeline(versioned=False):
         with open(log_path, "a") as f:
             f.write(error_msg)
         return False
+
