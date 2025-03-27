@@ -42,6 +42,12 @@ def retrain_pipeline(versioned=False):
             model_path = "models/lstm_model.keras"
             scaler_path = "models/scaler.save"
 
+        # 🚮 Remove old .h5 model if it exists
+        legacy_path = "models/lstm_model.h5"
+        if os.path.exists(legacy_path):
+            os.remove(legacy_path)
+        print("🧹 Removed old HDF5 model: models/lstm_model.h5")
+
         print("💾 Saving model and scaler...")
         save_model(model, scaler, model_path, scaler_path)
 
