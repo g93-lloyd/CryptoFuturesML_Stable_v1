@@ -33,7 +33,8 @@ def retrain_pipeline(versioned=False):
         X, y, fitted_scaler = prepare_data(df, feature_cols=features, target_col=target_col, window_size=window_size)
 
         print("🎯 Training LSTM model...")
-        model = train_lstm_model(X, y)
+        model = train_lstm_model(X, y, scaler)
+
         # Step 6: Decide where to save the model (versioned or overwrite)
 
         X, y, fitted_scaler = prepare_data(df, feature_cols=features, target_col=target_col, window_size=window_size)
