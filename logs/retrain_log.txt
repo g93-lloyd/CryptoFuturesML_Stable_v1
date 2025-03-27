@@ -17,3 +17,5 @@ Too Many Requests
 [2025-03-27 10:03:19] ❌ Retraining failed: name 'scaler' is not defined
 [2025-03-27 10:06:56] ❌ Retraining failed: name 'scaler' is not defined
 [2025-03-27 10:26:34] ❌ Retraining failed: name 'scaler' is not defined
+[2025-03-27 10:35:53] ❌ Retraining failed: train_lstm_model() missing 1 required positional argument: 'scaler'
+[2025-03-27 10:43:32] ❌ Retraining failed: local variable 'scaler' referenced before assignment
