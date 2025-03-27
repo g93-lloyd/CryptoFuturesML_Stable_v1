@@ -7,7 +7,7 @@ import time
 import random
 
 # Configurable constants from your config.py
-from config import BINANCE_SYMBOL, BINANCE_TIMEFRAME, OHLCV_LIMIT
+from src.config import BINANCE_SYMBOL, BINANCE_TIMEFRAME, OHLCV_LIMIT
 
 # Retry decorator (auto-retries if ccxt fails due to rate limit/network)
 from src.utils import retry
