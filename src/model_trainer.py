@@ -31,7 +31,7 @@ def prepare_data(df, feature_cols, target_col='close', window_size=10):
     return X, y, scaler  # ✅ Correctly return the fitted scaler
 
 # Builds, trains, and returns the LSTM model
-def train_lstm_model(X, y):
+def train_lstm_model(X, y, scaler):
     model = Sequential()
     model.add(LSTM(64, input_shape=(X.shape[1], X.shape[2])))
     model.add(Dense(1, activation='sigmoid'))  # Binary classification output

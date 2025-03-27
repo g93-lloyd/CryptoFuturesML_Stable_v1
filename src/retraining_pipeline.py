@@ -39,7 +39,7 @@ def retrain_pipeline(versioned=False):
         X, y, fitted_scaler = prepare_data(df, feature_cols=features, target_col=target_col, window_size=window_size)
 
         print("🎯 Training LSTM model...")
-        model = train_lstm_model(X, y)
+        model, scaler = train_lstm_model(X, y, scaler)
 
         if versioned:
             model_time = datetime.now().strftime("%Y-%m-%d_%H-%M")
