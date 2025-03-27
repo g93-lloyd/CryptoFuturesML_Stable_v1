@@ -33,8 +33,9 @@ def prepare_data(df, feature_cols, target_col='close', window_size=10):
 # Builds, trains, and returns the LSTM model
 def train_lstm_model(X, y, scaler):
     model = Sequential()
-    model.add(LSTM(64, input_shape=(X.shape[1], X.shape[2])))
-    model.add(Dense(1, activation='sigmoid'))  # Binary classification output
+    model.add(Input(shape=(X.shape[1], X.shape[2])))  # Proper input layer
+    model.add(LSTM(64))
+    model.add(Dense(1, activation='sigmoid'))  # Binary classification
 
     model.compile(
         optimizer='adam',
@@ -42,23 +43,23 @@ def train_lstm_model(X, y, scaler):
         metrics=['accuracy']
     )
 
-    # 🛡️ Add EarlyStopping to avoid overfitting
     early_stop = EarlyStopping(
         monitor='val_loss',
         patience=3,
         restore_best_weights=True
     )
 
-    model.fit(
+    history = model.fit(
         X,
         y,
-        epochs=50,                  # Increased epochs since EarlyStopping handles early exit
+        epochs=50,
         batch_size=32,
         validation_split=0.2,
-        callbacks=[early_stop]
+        callbacks=[early_stop],
+        verbose=1
     )
 
-    return model, scaler  # ✅ Actually return the real trained scaler  # or return model, scaler if you’ve fixed scaler logic # Note: scaler is now passed separately from prepare_data()
+    return model, scaler  # ✅ Return both model and scaler correctly
 
 # Saves model and scaler to disk
 def save_model(model, scaler, model_path, scaler_path):
