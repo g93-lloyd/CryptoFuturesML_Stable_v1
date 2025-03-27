@@ -1,6 +1,6 @@
 # src/retraining_pipeline.py
 
-# 🧪 Core modules for data fetching and feature engineering
+# 🌪️ Core modules for data fetching and feature engineering
 from src.market_data_collector import fetch_ohlcv                      # Grabs latest OHLCV data
 from src.sentiment_pipeline import fetch_twitter_sentiment            # Grabs latest Twitter sentiment
 from src.feature_engineering import add_technical_indicators, merge_sentiment  # RSI, MACD, EMA + merge sentiment
@@ -22,7 +22,7 @@ def retrain_pipeline(versioned=False):
 
     try:
         # Step 1: Fetch latest market data (5-minute candles, 1000 rows)
-        print("📥 Fetching fresh market data...")
+        print("📅 Fetching fresh market data...")
         df = fetch_ohlcv("BTC/USDT", timeframe="5m", limit=1000)
 
         # Step 2: Fetch fresh Twitter sentiment scores
@@ -30,7 +30,7 @@ def retrain_pipeline(versioned=False):
         sentiment_scores = fetch_twitter_sentiment()
 
         # Step 3: Add technical indicators and merge sentiment
-        print("🧪 Engineering features...")
+        print("🔪 Engineering features...")
         df = add_technical_indicators(df)
         df = merge_sentiment(df, sentiment_scores)
 
@@ -39,11 +39,12 @@ def retrain_pipeline(versioned=False):
         features = ['rsi_14', 'ema_21', 'macd', 'sentiment']
         target_col = 'close'
         window_size = 10
-        X, y, fitted_scaler = prepare_data(df, feature_cols=features, target_col=target_col, window_size=window_size)
+        X, y, scaler = prepare_data(df, feature_cols=features, target_col=target_col, window_size=window_size)
 
         # Step 5: Train the LSTM model on the processed features
         print("🎯 Training LSTM model...")
-        model = train_lstm_model(X, y)
+        model = train_lstm_model(X, y)  # scaler is already captured from prepare_data
+
         # Step 6: Decide where to save the model (versioned or overwrite)
         if versioned:
             model_time = datetime.now().strftime("%Y-%m-%d_%H-%M")
@@ -54,8 +55,8 @@ def retrain_pipeline(versioned=False):
             scaler_path = "models/scaler.save"
 
         # Step 7: Save trained model and scaler
-        print("💾 Saving model and scaler...")
-        save_model(model, fitted_scaler, model_path, scaler_path)
+        print("📎 Saving model and scaler...")
+        save_model(model, scaler, model_path, scaler_path)
 
         # Step 8: Update active model tracker
         with open("models/model_latest_path.txt", "w") as f:
