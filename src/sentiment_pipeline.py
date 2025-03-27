@@ -2,7 +2,7 @@
 
 import tweepy
 from textblob import TextBlob
-from config import TWITTER_BEARER_TOKEN
+from src.config import TWITTER_BEARER_TOKEN
 from src.utils import retry
 
 # ✅ Toggle this ON/OFF to use real or fallback sentiment
