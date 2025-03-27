@@ -58,7 +58,7 @@ def train_lstm_model(X, y):
         callbacks=[early_stop]
     )
 
-    return model, None  # or return model, scaler if you’ve fixed scaler logic # Note: scaler is now passed separately from prepare_data()
+    return model, scaler  # ✅ Actually return the real trained scaler  # or return model, scaler if you’ve fixed scaler logic # Note: scaler is now passed separately from prepare_data()
 
 # Saves model and scaler to disk
 def save_model(model, scaler, model_path, scaler_path):

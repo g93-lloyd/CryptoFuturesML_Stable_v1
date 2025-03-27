@@ -2,3 +2,17 @@
 [2025-03-27 02:31:07] ❌ Retraining failed: 429 Too Many Requests
 Too Many Requests
 [2025-03-27 07:10:57] ❌ Retraining failed: 'mae'
+[2025-03-27 07:39:16] ❌ Retraining failed: 429 Too Many Requests
+Too Many Requests
+[2025-03-27 08:24:47] ❌ Retraining failed: 429 Too Many Requests
+Too Many Requests
+[2025-03-27 09:00:07] ❌ Retraining failed: name 'scaler' is not defined
+[2025-03-27 09:07:52] ❌ Retraining failed: name 'scaler' is not defined
+[2025-03-27 09:13:36] ❌ Retraining failed: name 'scaler' is not defined
+[2025-03-27 09:26:29] ❌ Retraining failed: name 'scaler' is not defined
+[2025-03-27 09:33:24] ❌ Retraining failed: name 'scaler' is not defined
+[2025-03-27 09:40:18] ❌ Retraining failed: name 'scaler' is not defined
+[2025-03-27 09:47:31] ❌ Retraining failed: name 'scaler' is not defined
+[2025-03-27 09:56:33] ❌ Retraining failed: name 'scaler' is not defined
+[2025-03-27 10:03:19] ❌ Retraining failed: name 'scaler' is not defined
+[2025-03-27 10:06:56] ❌ Retraining failed: name 'scaler' is not defined
