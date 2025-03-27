@@ -27,7 +27,7 @@ def retrain_pipeline(versioned=False):
 
         # Step 2: Fetch fresh Twitter sentiment scores
         print("💬 Fetching latest sentiment data...")
-        sentiment_scores = fetch_twitter_sentiment(limit=50)
+        sentiment_scores = fetch_twitter_sentiment()
 
         # Step 3: Add technical indicators and merge sentiment
         print("🧪 Engineering features...")
