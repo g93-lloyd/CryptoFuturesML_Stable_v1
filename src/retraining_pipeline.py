@@ -5,7 +5,6 @@ from src.sentiment_pipeline import fetch_twitter_sentiment
 from src.feature_engineering import add_technical_indicators, merge_sentiment
 from src.model_trainer import prepare_data, train_lstm_model, save_model
 from src.mlflow_logger import start_experiment_run, log_params_and_metrics, log_artifacts
-
 from datetime import datetime
 import os
 
@@ -29,19 +28,12 @@ def retrain_pipeline(versioned=False):
         features = ['rsi_14', 'ema_21', 'macd', 'sentiment']
         target_col = 'close'
         window_size = 10
-
-        X, y, fitted_scaler = prepare_data(df, feature_cols=features, target_col=target_col, window_size=window_size)
-
-        print("🎯 Training LSTM model...")
-        model = train_lstm_model(X, y, scaler)
-
-        # Step 6: Decide where to save the model (versioned or overwrite)
-
-        X, y, fitted_scaler = prepare_data(df, feature_cols=features, target_col=target_col, window_size=window_size)
+        X, y, scaler = prepare_data(df, feature_cols=features, target_col=target_col, window_size=window_size)
 
         print("🎯 Training LSTM model...")
-        model, scaler = train_lstm_model(X, y, scaler)
+        model = train_lstm_model(X, y)  # Model training function
 
+        # ✅ scaler is already defined from prepare_data()
         if versioned:
             model_time = datetime.now().strftime("%Y-%m-%d_%H-%M")
             model_path = f"models/lstm_model_{model_time}.h5"
@@ -51,11 +43,7 @@ def retrain_pipeline(versioned=False):
             scaler_path = "models/scaler.save"
 
         print("💾 Saving model and scaler...")
-
-        save_model(model, fitted_scaler, model_path, scaler_path)
-
-        save_model(model, fitted_scaler, model_path, scaler_path)  # 🧠 fix applied here
-
+        save_model(model, scaler, model_path, scaler_path)
 
         with open("models/model_latest_path.txt", "w") as f:
             f.write(model_path)
