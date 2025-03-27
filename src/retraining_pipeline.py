@@ -43,8 +43,7 @@ def retrain_pipeline(versioned=False):
 
         # Step 5: Train the LSTM model on the processed features
         print("🎯 Training LSTM model...")
-        model, scaler = train_lstm_model(X, y)
-
+        model = train_lstm_model(X, y)
         # Step 6: Decide where to save the model (versioned or overwrite)
         if versioned:
             model_time = datetime.now().strftime("%Y-%m-%d_%H-%M")
