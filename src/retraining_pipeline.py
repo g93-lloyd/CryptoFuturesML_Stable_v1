@@ -39,7 +39,7 @@ def retrain_pipeline(versioned=False):
         features = ['rsi_14', 'ema_21', 'macd', 'sentiment']
         target_col = 'close'
         window_size = 10
-        X, y, _ = prepare_data(df, feature_cols=features, target_col=target_col, window_size=window_size)
+        X, y, scaler = prepare_data(df, feature_cols=features, target_col=target_col, window_size=window_size)
 
         # Step 5: Train the LSTM model on the processed features
         print("🎯 Training LSTM model...")
