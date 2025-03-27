@@ -16,7 +16,7 @@ from src.cli_dashboard import display_dashboard               # Displays trading
 # Interval between live loop cycles (in seconds) — 5 minutes = 300s
 INTERVAL_SECONDS = 300
 
-# Menu displayed in terminal when script is run
+# 📋 Menu displayed in terminal when script is run
 def menu():
     print("\n🧠 Crypto Futures ML System")
     print("────────────────────────────")
@@ -27,39 +27,39 @@ def menu():
     print("5️⃣  Exit")
     return input("Select an option (1-5): ")
 
-# Function to run in live loop mode (automated cycles)
+# 🔄 Function to run in live loop mode (automated cycles)
 def run_live_loop():
     print("🚀 Starting automated live loop (CTRL+C to stop)\n")
     while True:
         try:
-            # Show timestamp of current loop
+            # 🕒 Show timestamp of current loop
             print(f"\n⏳ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} — Running cycle...")
 
-            # Make prediction + trade (return signal and confidence)
+            # 🔮 Make prediction + trade (return signal and confidence)
             signal, confidence = predict_and_trade(return_result=True)
 
-            # If signal is LONG or SHORT, simulate a trade
+            # 💼 If signal is actionable, simulate a trade
             if signal in ["LONG", "SHORT"]:
-                df = fetch_ohlcv(limit=1)  # Get latest candle
-                current_price = df['close'].iloc[-1]  # Use close price
+                df = fetch_ohlcv(limit=1)  # Fetch latest candle
+                current_price = df['close'].iloc[-1]  # Get close price
                 handle_signal(signal=signal, price=current_price)  # Execute virtual trade
             else:
                 print(f"🔍 No actionable signal: {signal} (confidence: {confidence:.2%})")
 
-            # Show summary in CLI after each loop
+            # 📊 Show stats in CLI after each loop
             display_dashboard()
 
-            # Wait until next interval
+            # ⏱️ Wait until next prediction cycle
             time.sleep(INTERVAL_SECONDS)
 
         except KeyboardInterrupt:
             print("\n🛑 Live loop stopped by user.")  # Graceful exit
             break
         except Exception as e:
-            print(f"❌ Loop error: {e}")  # Handle unexpected errors
+            print(f"❌ Loop error: {e}")
             time.sleep(INTERVAL_SECONDS)
 
-# Entry point: command menu to interact with the system
+# 🚀 Entry point: interactive command-line system menu
 def main():
     while True:
         choice = menu()
@@ -68,7 +68,7 @@ def main():
             predict_and_trade()
         elif choice == '2':
             print("\n🔁 Retraining model...")
-            retrain_pipeline()
+            retrain_pipeline()  # Model will now be saved in `.keras` format
         elif choice == '3':
             print("\n📊 Analyzing trade performance...")
             analyze_performance()
@@ -80,6 +80,6 @@ def main():
         else:
             print("❌ Invalid choice. Try again.")
 
-# Only runs if this file is called directly
+# Only run if executed directly
 if __name__ == "__main__":
     main()
