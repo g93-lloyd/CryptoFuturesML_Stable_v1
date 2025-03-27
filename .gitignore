@@ -13,10 +13,10 @@ venv/
 .ipynb_checkpoints
 
 # Data and Models
-*.h5
-*.save
-models/
-logs/
+#*.h5
+#*.save
+#models/
+#logs/
 
 # System files
 .DS_Store
