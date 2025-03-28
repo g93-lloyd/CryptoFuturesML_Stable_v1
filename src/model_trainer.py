@@ -53,10 +53,16 @@ def save_model(model, scaler, model_path, scaler_path):
     assert model_path.endswith(".keras"), f"❌ ERROR: model_path must end in .keras — received: {model_path}"
 
     try:
-        model.save(model_path)
+        # ✅ Force saving in the modern format
+        model.save(model_path, save_format="keras")
+
+        # Save the scaler
         joblib.dump(scaler, scaler_path)
+
         print(f"✅ Model saved: {model_path}")
         print(f"✅ Scaler saved: {scaler_path}")
+
     except Exception as e:
         print(f"❌ Failed to save model: {e}")
         raise
+
