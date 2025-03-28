@@ -38,14 +38,12 @@ def train_lstm_model(X, y):
     early_stop = EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)
 
     # ✅ Optional .keras checkpoint during training
-    checkpoint_path = "models/temp_training_checkpoint.keras"
     model_checkpoint = ModelCheckpoint(
-        filepath=checkpoint_path,
-        monitor='val_loss',
-        save_best_only=True,
-        save_format="keras",
-        verbose=1
-    )
+    filepath=checkpoint_path,
+    monitor='val_loss',
+    save_best_only=True,
+    verbose=1
+)
 
     model.fit(
         X, y,
