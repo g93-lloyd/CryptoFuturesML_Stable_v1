@@ -8,8 +8,9 @@ from src.mlflow_logger import start_experiment_run, log_params_and_metrics, log_
 from datetime import datetime
 import os
 
-print("🚨 DEBUG: This is the correct retraining_pipeline.py being executed.")
 def retrain_pipeline(versioned=False):
+    print("🚨 DEBUG: This is the correct retraining_pipeline.py being executed.")
+
     log_path = "logs/retrain_log.txt"
     os.makedirs("logs", exist_ok=True)
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -34,7 +35,7 @@ def retrain_pipeline(versioned=False):
         print("🎯 Training LSTM model...")
         model = train_lstm_model(X, y)
 
-        # ✅ Save with Keras format
+        # ✅ Set save paths
         if versioned:
             model_time = datetime.now().strftime("%Y-%m-%d_%H-%M")
             model_path = f"models/lstm_model_{model_time}.keras"
@@ -50,9 +51,8 @@ def retrain_pipeline(versioned=False):
             print("🧹 Removed old HDF5 model: models/lstm_model.h5")
 
         print(f"💾 Saving model and scaler to: {model_path}")
-        save_model(model, scaler, model_path, scaler_path)  # ✅ This uses model.save(model_path)
+        save_model(model, scaler, model_path, scaler_path)  # ✅ Controlled save
 
-        # 🔐 Save latest path for dynamic loading
         with open("models/model_latest_path.txt", "w") as f:
             f.write(model_path)
 
