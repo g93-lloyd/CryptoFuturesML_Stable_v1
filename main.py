@@ -9,7 +9,7 @@ from datetime import datetime
 # Core components from your trading system
 from src.live_trading_engine import predict_and_trade         # Makes predictions & optionally logs simulated trades
 from src.retraining_pipeline import retrain_pipeline          # Retrains your model using updated data
-from src.trade_analyzer import analyze_trade_log              # 📊 Trade log analysis for Option 3
+from src.trade_analyzer import analyze_performance            # 📊 Trade log analysis for Option 3
 from src.market_data_collector import fetch_ohlcv             # Grabs latest OHLCV price data
 from src.position_manager import handle_signal                # Manages simulated trade entry/exit
 from src.cli_dashboard import display_dashboard               # Displays trading stats in terminal
