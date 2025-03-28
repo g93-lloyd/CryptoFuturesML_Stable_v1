@@ -9,30 +9,21 @@ from datetime import datetime
 import os
 import subprocess
 
-def check_git_sync():
-    try:
-        fetch = subprocess.run(['git', 'fetch', 'origin'], check=True, capture_output=True)
-        status = subprocess.run(['git', 'status', '-uno'], capture_output=True, text=True)
-
-        log_entry = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {status.stdout.strip()}\n"
-        os.makedirs("logs", exist_ok=True)
-        with open("logs/git_sync_log.txt", "a") as log_file:
-            log_file.write(log_entry)
-
-        if "up to date" in status.stdout:
-            print("✅ Git is up to date with origin/main.")
-        else:
-            print("⚠️ WARNING: Your branch is not synced with origin/main!")
-    except Exception as e:
-        print(f"❌ Git sync check failed: {e}")
-
 def retrain_pipeline(versioned=False):
-    check_git_sync()
     print("🚨 DEBUG: This is the correct retraining_pipeline.py being executed.")
 
     log_path = "logs/retrain_log.txt"
     os.makedirs("logs", exist_ok=True)
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # 🧠 Verify Git sync before retraining
+    print("✅ Checking Git sync status...")
+    sync_status = subprocess.getoutput("git fetch origin && git status -uno")
+    if "up to date" in sync_status.lower():
+        print("✅ Git is up to date with origin/main.")
+    else:
+        print("❗ WARNING: Git is NOT in sync with origin/main!")
+        print(sync_status)
 
     try:
         print("📅 Fetching fresh market data...")
@@ -52,7 +43,7 @@ def retrain_pipeline(versioned=False):
         X, y, scaler = prepare_data(df, feature_cols=features, target_col=target_col, window_size=window_size)
 
         print("🎯 Training LSTM model...")
-        model, checkpoint_path = train_lstm_model(X, y)
+        model = train_lstm_model(X, y)  # ✅ Only one object returned
 
         # ✅ Set save paths
         if versioned:
@@ -68,10 +59,6 @@ def retrain_pipeline(versioned=False):
         if os.path.exists(legacy_path):
             os.remove(legacy_path)
             print("🧹 Removed old HDF5 model: models/lstm_model.h5")
-
-        # 🧹 Cleanup checkpoint
-        if os.path.exists(checkpoint_path):
-            os.remove(checkpoint_path)
 
         print(f"💾 Saving model and scaler to: {model_path}")
         save_model(model, scaler, model_path, scaler_path)
