@@ -1,5 +1,4 @@
 # src/retraining_pipeline.py
-print("🚨 DEBUG: This is the correct retraining_pipeline.py being executed.")
 
 from src.market_data_collector import fetch_ohlcv
 from src.sentiment_pipeline import fetch_twitter_sentiment
@@ -9,6 +8,7 @@ from src.mlflow_logger import start_experiment_run, log_params_and_metrics, log_
 from datetime import datetime
 import os
 
+print("🚨 DEBUG: This is the correct retraining_pipeline.py being executed.")
 def retrain_pipeline(versioned=False):
     log_path = "logs/retrain_log.txt"
     os.makedirs("logs", exist_ok=True)
