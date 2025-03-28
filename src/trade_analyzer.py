@@ -12,8 +12,14 @@ def analyze_performance():
         return
 
     try:
+        # ✅ Check if file is completely empty
+        if os.path.getsize(TRADE_LOG_PATH) == 0:
+            print("⚠️ Trade log file is empty.")
+            return
+
         df = pd.read_csv(TRADE_LOG_PATH)
 
+        # ✅ Check if there are too few trades to analyze
         if df.empty or len(df) < 2:
             print("⚠️ Not enough trade data to analyze.")
             return
@@ -42,10 +48,12 @@ def analyze_performance():
 
         print(summary)
 
-        # Save to summary log
+        # ✅ Save summary to file
         os.makedirs("logs", exist_ok=True)
         with open(SUMMARY_LOG_PATH, "w") as f:
             f.write(summary)
 
+    except pd.errors.EmptyDataError:
+        print("⚠️ Trade log file is malformed or has no readable content.")
     except Exception as e:
         print(f"❌ Performance analysis failed: {str(e)}")
