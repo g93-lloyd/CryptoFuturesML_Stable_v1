@@ -1,4 +1,5 @@
 # src/retraining_pipeline.py
+print("🚨 DEBUG: This is the correct retraining_pipeline.py being executed.")
 
 from src.market_data_collector import fetch_ohlcv
 from src.sentiment_pipeline import fetch_twitter_sentiment
