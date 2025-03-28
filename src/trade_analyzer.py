@@ -2,51 +2,50 @@
 
 import pandas as pd
 import os
-from datetime import datetime
 
-def analyze_trade_log(log_path="logs/trade_log.csv"):
-    if not os.path.exists(log_path):
-        return "❌ No trade log file found. Cannot analyze performance."
+TRADE_LOG_PATH = "logs/trade_log.csv"
+SUMMARY_LOG_PATH = "logs/performance_summary.txt"
+
+def analyze_performance():
+    if not os.path.exists(TRADE_LOG_PATH):
+        print("⚠️ No trade log found.")
+        return
 
     try:
-        df = pd.read_csv(log_path)
+        df = pd.read_csv(TRADE_LOG_PATH)
 
-        if df.empty or len(df.columns) == 0:
-            return "❌ Trade log is empty or invalid. No data to analyze."
+        if df.empty or len(df) < 2:
+            print("⚠️ Not enough trade data to analyze.")
+            return
 
+        wins = df[df["PnL"] > 0]
+        losses = df[df["PnL"] < 0]
         total_trades = len(df)
         total_pnl = df["PnL"].sum()
-        profitable_trades = df[df["PnL"] > 0].shape[0]
-        unprofitable_trades = df[df["PnL"] < 0].shape[0]
-        accuracy = (profitable_trades / total_trades) * 100 if total_trades > 0 else 0
+        win_rate = len(wins) / total_trades * 100
+        avg_win = wins["PnL"].mean() if not wins.empty else 0
+        avg_loss = losses["PnL"].mean() if not losses.empty else 0
+        max_drawdown = df["PnL"].min()
 
-        max_gain = df["PnL"].max()
-        max_loss = df["PnL"].min()
-        avg_pnl = df["PnL"].mean()
-
-        final_balance = df["Balance"].iloc[-1] if "Balance" in df.columns else "Unknown"
-
-        last_trade_time = df["Time"].iloc[-1] if "Time" in df.columns else "Unknown"
-
-        report = f"""
+        summary = f"""
 📊 Trade Performance Summary
 ────────────────────────────
-🕒 Last Trade Time: {last_trade_time}
-📈 Total Trades: {total_trades}
-💰 Final Balance: ${final_balance:.2f}
-📊 Total PnL: {total_pnl:.2f}
-✅ Profitable Trades: {profitable_trades}
-❌ Unprofitable Trades: {unprofitable_trades}
-🎯 Accuracy: {accuracy:.2f}%
-📉 Max Loss: {max_loss:.2f}
-📈 Max Gain: {max_gain:.2f}
-📐 Avg PnL per Trade: {avg_pnl:.2f}
+📈 Total Trades:       {total_trades}
+💰 Total PnL:          {total_pnl:.2f} USDT
+🏆 Win Rate:           {win_rate:.2f}%
+📊 Avg Win:            {avg_win:.2f}
+📉 Avg Loss:           {avg_loss:.2f}
+🔻 Max Drawdown:       {max_drawdown:.2f}
+
+📝 Summary also saved to: {SUMMARY_LOG_PATH}
 """
-        return report
+
+        print(summary)
+
+        # Save to summary log
+        os.makedirs("logs", exist_ok=True)
+        with open(SUMMARY_LOG_PATH, "w") as f:
+            f.write(summary)
 
     except Exception as e:
-        return f"❌ Error analyzing trade log: {str(e)}"
-
-# Test Run
-if __name__ == "__main__":
-    print(analyze_trade_log())
+        print(f"❌ Performance analysis failed: {str(e)}")
