@@ -53,8 +53,9 @@ def train_lstm_model(X, y):
 
 # 💾 Saves the trained model and scaler
 def save_model(model, scaler, model_path, scaler_path):
-    # ✅ Automatically saves in .keras format based on file extension
+    print(f"🚨 DEBUG: Saving model to path → {model_path}")
     model.save(model_path)
     joblib.dump(scaler, scaler_path)
     print(f"✅ Model saved: {model_path}")
     print(f"✅ Scaler saved: {scaler_path}")
+
