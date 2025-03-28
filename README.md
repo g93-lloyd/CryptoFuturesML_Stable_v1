@@ -53,3 +53,59 @@ A professional-grade, home-deployable crypto futures machine learning trading sy
 - ✅ Backtesting
 - ✅ Security
 - ✅ Reporting
+
+
+
+🚀 VPS Migration & Recovery Guide (For CryptoFuturesML)
+If you ever switch to a new VPS or change IP addresses, follow this step-by-step guide to reconfigure your environment without losing project automation or sync:
+
+✅ Step 1: Clone the GitHub Repository
+bash
+Copy
+Edit
+git clone https://github.com/<your-username>/CryptoFuturesML_Stable_v1.git
+cd CryptoFuturesML_Stable_v1
+✅ Step 2: Recreate the Virtual Environment
+bash
+Copy
+Edit
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+✅ Step 3: Restore Git Automation
+Append the following to your ~/.bashrc:
+
+bash
+Copy
+Edit
+# Auto-sync with GitHub on terminal login
+alias git-resync='git fetch origin && git reset --hard origin/main && git clean -fd && echo "✅ Project resynced to match GitHub (origin/main)"'
+git-resync  # Auto-run on login
+Then activate:
+
+bash
+Copy
+Edit
+source ~/.bashrc
+✅ Step 4: Check Git Connection
+Ensure your VPS has the correct SSH key or access to GitHub:
+
+bash
+Copy
+Edit
+git status
+✅ Step 5: Reconnect ngrok (Optional for Remote Access)
+If using ngrok for VPS access:
+
+Install ngrok
+
+Re-authenticate (ngrok config add-authtoken <your_token>)
+
+Launch your tunnels again
+
+📁 Additional Notes
+Don’t use nano to manually change code unless you git add + commit + push to sync with GitHub.
+
+Always edit code via VS Code, commit, and push from there to keep it clean.
+
+Weekly auto-cleanup is scheduled for logs/git_sync_log.txt.
