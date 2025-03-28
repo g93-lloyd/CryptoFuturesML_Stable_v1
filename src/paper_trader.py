@@ -68,7 +68,7 @@ def simulate_trade():
             position = None
             entry_price = 0.0
 
-        log_trade(timestamp, signal, current_price, action, pnl, balance)
+        log_trade(timestamp, signal, current_price, action, pnl, balance) # ✅ Only triggered when a trade is exited
 
     except Exception as e:
         logging.error(f"❌ simulate_trade error: {str(e)}")
