@@ -3,42 +3,37 @@
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
-from keras.layers import LSTM, Dense
+from keras.layers import LSTM, Dense, Input
 from keras.callbacks import EarlyStopping
 import joblib
 
-# ✅ Prepares the dataset for LSTM input by creating sliding windows
+# Prepares LSTM-compatible dataset
 def prepare_data(df, feature_cols, target_col='close', window_size=10):
     df = df.dropna().reset_index(drop=True)
-
-    # 🟡 Define binary target: 1 if next candle is higher, else 0
     df['target'] = (df[target_col].shift(-1) > df[target_col]).astype(int)
 
-    # 🧪 Extract features and target
     features = df[feature_cols].values
     target = df['target'].values
 
-    # 📏 Normalize features using MinMaxScaler
     scaler = MinMaxScaler()
     features_scaled = scaler.fit_transform(features)
 
-    # 🎛️ Create sequences for LSTM
     X, y = [], []
     for i in range(window_size, len(features_scaled)):
-        X.append(features_scaled[i-window_size:i])
+        X.append(features_scaled[i - window_size:i])
         y.append(target[i])
 
     return np.array(X), np.array(y), scaler
 
-# 🧠 Builds and trains an LSTM model
+# Trains and returns the LSTM model
 def train_lstm_model(X, y):
     model = Sequential()
-    model.add(LSTM(64, input_shape=(X.shape[1], X.shape[2])))
+    model.add(Input(shape=(X.shape[1], X.shape[2])))
+    model.add(LSTM(64))
     model.add(Dense(1, activation='sigmoid'))
 
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
-    # ⏹️ Early stopping to prevent overfitting
     early_stop = EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)
 
     model.fit(
@@ -51,16 +46,17 @@ def train_lstm_model(X, y):
 
     return model
 
-# 💾 Saves the trained model and scaler
+# Saves model in .keras format and logs path
 def save_model(model, scaler, model_path, scaler_path):
     print("🚨 DEBUG: save_model() called")
     print(f"🚨 model_path received: {model_path}")
-    assert model_path.endswith(".keras"), f"❌ model_path is not using .keras format: {model_path}"
+    assert model_path.endswith(".keras"), f"❌ ERROR: model_path must end in .keras — received: {model_path}"
 
-    model.save(model_path)
-    joblib.dump(scaler, scaler_path)
-    print(f"✅ Model saved: {model_path}")
-    print(f"✅ Scaler saved: {scaler_path}")
-
-
-
+    try:
+        model.save(model_path)
+        joblib.dump(scaler, scaler_path)
+        print(f"✅ Model saved: {model_path}")
+        print(f"✅ Scaler saved: {scaler_path}")
+    except Exception as e:
+        print(f"❌ Failed to save model: {e}")
+        raise
