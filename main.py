@@ -80,7 +80,7 @@ def main():
             retrain_pipeline()
         elif choice == '3':
             print("\n📊 Analyzing trade performance...")
-            analyze_trade_log()
+            analyze_performance()
         elif choice == '4':
             run_live_loop()
         elif choice == '5':
