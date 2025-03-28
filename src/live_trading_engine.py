@@ -17,7 +17,7 @@ from src.utils import log_prediction
 SILENT_MODE = False
 CONFIDENCE_LOG_PATH = "logs/confidence_log.csv"
 
-# Load latest model path from tracker
+# Load latest model path from tracker (prioritizes .keras)
 def get_latest_model_path():
     with open("models/model_latest_path.txt", "r") as f:
         path = f.read().strip()
@@ -25,6 +25,7 @@ def get_latest_model_path():
         raise FileNotFoundError(f"❌ Model file not found: {path}")
     return path
 
+# Load latest scaler path from tracker or directory
 def get_latest_scaler_path():
     scaler_dir = "models/"
     scalers = [f for f in os.listdir(scaler_dir) if f.endswith(".save")]
@@ -33,27 +34,29 @@ def get_latest_scaler_path():
     scalers.sort(reverse=True)
     return os.path.join(scaler_dir, scalers[0])
 
-# Logs confidence data to CSV
+# 🔍 Log confidence metrics to CSV
 def log_confidence(signal, confidence, rsi, price):
-    entry = {
-        "Time": datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
-        "Signal": signal,
-        "Confidence": confidence,
-        "RSI": rsi,
-        "Price": price
-    }
     os.makedirs("logs", exist_ok=True)
+    entry = {
+        "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+        "signal": signal,
+        "confidence": round(confidence, 4),
+        "rsi": round(rsi, 2),
+        "price": round(price, 2)
+    }
     df = pd.DataFrame([entry])
-    if not os.path.exists(CONFIDENCE_LOG_PATH):
-        df.to_csv(CONFIDENCE_LOG_PATH, index=False)
+    if os.path.exists(CONFIDENCE_LOG_PATH):
+        df.to_csv(CONFIDENCE_LOG_PATH, mode='a', header=False, index=False)
     else:
-        df.to_csv(CONFIDENCE_LOG_PATH, mode="a", header=False, index=False)
+        df.to_csv(CONFIDENCE_LOG_PATH, index=False)
 
-# 🔮 Prediction and optional trade execution
+# 🔮 Prediction Logic
 def predict_and_trade(return_result=False):
     try:
-        model = load_model(get_latest_model_path())
-        scaler = joblib.load(get_latest_scaler_path())
+        model_path = get_latest_model_path()
+        scaler_path = get_latest_scaler_path()
+        model = load_model(model_path)
+        scaler = joblib.load(scaler_path)
 
         df = fetch_ohlcv("BTC/USDT", limit=100)
         df = add_technical_indicators(df)
@@ -71,9 +74,11 @@ def predict_and_trade(return_result=False):
 
         prediction = model.predict(input_data, verbose=0)
         confidence = float(prediction[0][0])
+
         latest_rsi = df['rsi_14'].iloc[-1]
         current_price = df['close'].iloc[-1]
 
+        # Map prediction to signal
         if confidence > 0.6:
             signal = "LONG"
         elif confidence < 0.4:
@@ -81,17 +86,17 @@ def predict_and_trade(return_result=False):
         else:
             signal = "HOLD"
 
-        # Filter weak signals
+        # Always log confidence regardless of trade trigger
+        log_confidence(signal, confidence, latest_rsi, current_price)
+
+        # Trade filtering logic
         allow_trade = False
         if signal == "LONG" and latest_rsi < 30 and confidence > 0.7:
             allow_trade = True
         elif signal == "SHORT" and latest_rsi > 70 and confidence > 0.7:
             allow_trade = True
 
-        # 🔍 Log confidence snapshot
-        log_confidence(signal, confidence, latest_rsi, current_price)
-
-        # 🧠 Prediction logging
+        # Log to unified prediction log
         log_prediction(
             signal if allow_trade else "FILTERED",
             confidence,
