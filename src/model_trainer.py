@@ -53,9 +53,15 @@ def train_lstm_model(X, y):
 
 # 💾 Saves the trained model and scaler
 def save_model(model, scaler, model_path, scaler_path):
-    print(f"🚨 DEBUG: Saving model to path → {model_path}")
+    print("🚨 DEBUG: save_model() called")
+    print(f"🚨 model_path type: {type(model_path)}")
+    print(f"🚨 model_path value: {model_path}")
+    
+    assert model_path.endswith(".keras"), "❌ Model path is not using .keras format!"
+
     model.save(model_path)
     joblib.dump(scaler, scaler_path)
     print(f"✅ Model saved: {model_path}")
     print(f"✅ Scaler saved: {scaler_path}")
+
 
