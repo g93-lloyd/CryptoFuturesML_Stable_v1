@@ -51,6 +51,7 @@ def retrain_pipeline(versioned=False):
             print("🧹 Removed old HDF5 model: models/lstm_model.h5")
 
         print(f"💾 Saving model and scaler to: {model_path}")
+        print("🚨 About to call save_model with:", model_path)
         save_model(model, scaler, model_path, scaler_path)  # ✅ Controlled save
 
         with open("models/model_latest_path.txt", "w") as f:
