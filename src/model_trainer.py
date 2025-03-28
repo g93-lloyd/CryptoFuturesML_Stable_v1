@@ -4,8 +4,9 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, Input
-from keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 import joblib
+import os
 
 # Prepares LSTM-compatible dataset
 def prepare_data(df, feature_cols, target_col='close', window_size=10):
@@ -36,13 +37,27 @@ def train_lstm_model(X, y):
 
     early_stop = EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)
 
+    # ✅ Optional .keras checkpoint during training
+    checkpoint_path = "models/temp_training_checkpoint.keras"
+    model_checkpoint = ModelCheckpoint(
+        filepath=checkpoint_path,
+        monitor='val_loss',
+        save_best_only=True,
+        save_format="keras",
+        verbose=1
+    )
+
     model.fit(
         X, y,
         epochs=50,
         batch_size=32,
         validation_split=0.2,
-        callbacks=[early_stop]
+        callbacks=[early_stop, model_checkpoint]
     )
+
+    # Optional: remove temp checkpoint after training
+    if os.path.exists(checkpoint_path):
+        os.remove(checkpoint_path)
 
     return model
 
@@ -53,10 +68,7 @@ def save_model(model, scaler, model_path, scaler_path):
     assert model_path.endswith(".keras"), f"❌ ERROR: model_path must end in .keras — received: {model_path}"
 
     try:
-        # ✅ Force saving in the modern format
         model.save(model_path, save_format="keras")
-
-        # Save the scaler
         joblib.dump(scaler, scaler_path)
 
         print(f"✅ Model saved: {model_path}")
@@ -65,4 +77,3 @@ def save_model(model, scaler, model_path, scaler_path):
     except Exception as e:
         print(f"❌ Failed to save model: {e}")
         raise
-
