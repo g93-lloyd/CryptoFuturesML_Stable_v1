@@ -31,9 +31,9 @@ def retrain_pipeline(versioned=False):
         X, y, scaler = prepare_data(df, feature_cols=features, target_col=target_col, window_size=window_size)
 
         print("🎯 Training LSTM model...")
-        model = train_lstm_model(X, y)  # Model training function
+        model = train_lstm_model(X, y)
 
-        # ✅ scaler is already defined from prepare_data()
+        # ✅ Save with Keras format
         if versioned:
             model_time = datetime.now().strftime("%Y-%m-%d_%H-%M")
             model_path = f"models/lstm_model_{model_time}.keras"
@@ -42,15 +42,16 @@ def retrain_pipeline(versioned=False):
             model_path = "models/lstm_model.keras"
             scaler_path = "models/scaler.save"
 
-        # 🚮 Remove old .h5 model if it exists
+        # 🧹 Remove legacy .h5 model if it exists
         legacy_path = "models/lstm_model.h5"
         if os.path.exists(legacy_path):
             os.remove(legacy_path)
-        print("🧹 Removed old HDF5 model: models/lstm_model.h5")
+            print("🧹 Removed old HDF5 model: models/lstm_model.h5")
 
-        print("💾 Saving model and scaler...")
-        save_model(model, scaler, model_path, scaler_path)
+        print(f"💾 Saving model and scaler to: {model_path}")
+        save_model(model, scaler, model_path, scaler_path)  # ✅ This uses model.save(model_path)
 
+        # 🔐 Save latest path for dynamic loading
         with open("models/model_latest_path.txt", "w") as f:
             f.write(model_path)
 
