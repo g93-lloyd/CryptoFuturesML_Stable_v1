@@ -3,6 +3,7 @@
 # Built-in modules
 import sys
 import time
+import subprocess
 from datetime import datetime
 
 # Core components from your trading system
@@ -15,6 +16,20 @@ from src.cli_dashboard import display_dashboard               # Displays trading
 
 # Interval between live loop cycles (in seconds) — 5 minutes = 300s
 INTERVAL_SECONDS = 300
+
+# ✅ Safety check to ensure local repo is in sync with GitHub
+def check_git_sync():
+    try:
+        subprocess.run(["git", "fetch", "origin"], check=True)
+        status = subprocess.check_output(["git", "status", "-uno"]).decode()
+        if "behind" in status:
+            print("⚠️ WARNING: Local branch is behind origin/main. Run `git-resync` to sync before retraining.")
+        elif "diverged" in status:
+            print("❌ ERROR: Local and remote have diverged. Run manual conflict resolution.")
+        else:
+            print("✅ Git is up to date with origin/main.")
+    except Exception as e:
+        print(f"❌ Git sync check failed: {e}")
 
 # 📋 Menu displayed in terminal when script is run
 def menu():
@@ -68,6 +83,7 @@ def main():
             predict_and_trade()
         elif choice == '2':
             print("\n🔁 Retraining model...")
+            check_git_sync()
             retrain_pipeline()  # Model will now be saved in `.keras` format
         elif choice == '3':
             print("\n📊 Analyzing trade performance...")
