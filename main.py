@@ -9,7 +9,7 @@ from datetime import datetime
 # Core components from your trading system
 from src.live_trading_engine import predict_and_trade         # Makes predictions & optionally logs simulated trades
 from src.retraining_pipeline import retrain_pipeline          # Retrains your model using updated data
-from src.monitoring import analyze_performance                # Analyzes trade logs (PnL, win rate, etc.)
+from src.trade_analyzer import analyze_trade_log              # 📊 Trade log analysis for Option 3
 from src.market_data_collector import fetch_ohlcv             # Grabs latest OHLCV price data
 from src.position_manager import handle_signal                # Manages simulated trade entry/exit
 from src.cli_dashboard import display_dashboard               # Displays trading stats in terminal
@@ -47,28 +47,21 @@ def run_live_loop():
     print("🚀 Starting automated live loop (CTRL+C to stop)\n")
     while True:
         try:
-            # 🕒 Show timestamp of current loop
             print(f"\n⏳ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} — Running cycle...")
-
-            # 🔮 Make prediction + trade (return signal and confidence)
             signal, confidence = predict_and_trade(return_result=True)
 
-            # 💼 If signal is actionable, simulate a trade
             if signal in ["LONG", "SHORT"]:
-                df = fetch_ohlcv(limit=1)  # Fetch latest candle
-                current_price = df['close'].iloc[-1]  # Get close price
-                handle_signal(signal=signal, price=current_price)  # Execute virtual trade
+                df = fetch_ohlcv(limit=1)
+                current_price = df['close'].iloc[-1]
+                handle_signal(signal=signal, price=current_price)
             else:
                 print(f"🔍 No actionable signal: {signal} (confidence: {confidence:.2%})")
 
-            # 📊 Show stats in CLI after each loop
             display_dashboard()
-
-            # ⏱️ Wait until next prediction cycle
             time.sleep(INTERVAL_SECONDS)
 
         except KeyboardInterrupt:
-            print("\n🛑 Live loop stopped by user.")  # Graceful exit
+            print("\n🛑 Live loop stopped by user.")
             break
         except Exception as e:
             print(f"❌ Loop error: {e}")
@@ -84,10 +77,10 @@ def main():
         elif choice == '2':
             print("\n🔁 Retraining model...")
             check_git_sync()
-            retrain_pipeline()  # Model will now be saved in `.keras` format
+            retrain_pipeline()
         elif choice == '3':
             print("\n📊 Analyzing trade performance...")
-            analyze_performance()
+            analyze_trade_log()
         elif choice == '4':
             run_live_loop()
         elif choice == '5':
@@ -96,6 +89,5 @@ def main():
         else:
             print("❌ Invalid choice. Try again.")
 
-# Only run if executed directly
 if __name__ == "__main__":
     main()
