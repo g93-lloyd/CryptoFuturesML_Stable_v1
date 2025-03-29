@@ -50,7 +50,7 @@ def plot_signal_distribution():
 
         plt.figure(figsize=(6, 4))
         signal_counts.plot(kind="bar", color=["green", "red", "gray"])
-        plt.title("📊 Signal Distribution")
+        plt.title("Signal Distribution")
         plt.ylabel("Frequency")
         plt.xticks(rotation=0)
         plt.tight_layout()
