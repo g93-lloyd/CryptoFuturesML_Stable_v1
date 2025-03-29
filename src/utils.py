@@ -38,7 +38,7 @@ def retry(max_attempts=3, delay=2, backoff=2, jitter=True, logger=None):
                     return func(*args, **kwargs)
                 except Exception as e:
                     attempts += 1
-                    msg = f"⚠️ Attempt {attempts} failed: {e}"
+                    msg = f"\u26a0\ufe0f Attempt {attempts} failed: {e}"
                     print(msg) if not logger else logger(msg)
                     if attempts == max_attempts:
                         raise
@@ -64,27 +64,20 @@ def model_artifacts_exist():
 def init_log_files():
     os.makedirs("logs", exist_ok=True)
 
-    # Confidence Log
-    confidence_path = "logs/confidence_log.csv"
-    if not os.path.exists(confidence_path) or os.path.getsize(confidence_path) == 0:
-        with open(confidence_path, "w") as f:
-            f.write("timestamp,signal,confidence,rsi,price,source\n")
+    log_specs = {
+        "logs/confidence_log.csv": "timestamp,signal,confidence,rsi,price,source\n",
+        "logs/trade_log.csv": "Time,Signal,Price,Action,PnL,Balance\n",
+        "logs/virtual_positions.csv": "timestamp,entry_time,signal,entry_price,exit_price,pnl_percent,balance_after\n",
+        "logs/daily_log.txt": "# Daily Trade Summary Log\n\n"
+    }
 
-    # Trade Log
-    trade_log_path = "logs/trade_log.csv"
-    if not os.path.exists(trade_log_path) or os.path.getsize(trade_log_path) == 0:
-        with open(trade_log_path, "w") as f:
-            f.write("Time,Signal,Price,Action,PnL,Balance\n")
+    for path, header in log_specs.items():
+        if not os.path.exists(path) or os.path.getsize(path) == 0:
+            with open(path, "w") as f:
+                f.write(header)
 
-    # Virtual Position Log
-    position_log_path = "logs/virtual_positions.csv"
-    if not os.path.exists(position_log_path) or os.path.getsize(position_log_path) == 0:
-        with open(position_log_path, "w") as f:
-            f.write("timestamp,entry_time,signal,entry_price,exit_price,pnl_percent,balance_after\n")
-
-
+# === Inject Test Row into Virtual Positions (for dashboard init) ===
 def inject_virtual_trade_test_row():
-    """Inserts a default test row to virtual_positions.csv if it only has headers."""
     path = "logs/virtual_positions.csv"
     if not os.path.exists(path):
         return
@@ -106,3 +99,28 @@ def inject_virtual_trade_test_row():
             print("✅ Inserted test row into virtual_positions.csv.")
     except Exception as e:
         print(f"⚠️ Could not insert test row: {e}")
+
+# === Write a Daily Log Summary to File ===
+def write_daily_log():
+    path = "logs/virtual_positions.csv"
+    if not os.path.exists(path):
+        return
+
+    try:
+        df = pd.read_csv(path, parse_dates=['timestamp'])
+        today = datetime.utcnow().date()
+        today_trades = df[df['timestamp'].dt.date == today]
+
+        if today_trades.empty:
+            return
+
+        summary = f"\n[{datetime.utcnow().strftime('%Y-%m-%d')}]\n"
+        summary += f"Total Trades: {len(today_trades)}\n"
+        summary += f"Avg PnL: {today_trades['pnl_percent'].mean():.2f}%\n"
+        summary += f"Win Rate: {(today_trades['pnl_percent'] > 0).mean() * 100:.1f}%\n"
+
+        with open("logs/daily_log.txt", "a") as f:
+            f.write(summary)
+
+    except Exception as e:
+        print(f"❌ Failed to write daily log: {e}")
