@@ -38,7 +38,7 @@ def retry(max_attempts=3, delay=2, backoff=2, jitter=True, logger=None):
                     return func(*args, **kwargs)
                 except Exception as e:
                     attempts += 1
-                    msg = f"\u26a0\ufe0f Attempt {attempts} failed: {e}"
+                    msg = f"⚠️ Attempt {attempts} failed: {e}"
                     print(msg) if not logger else logger(msg)
                     if attempts == max_attempts:
                         raise
@@ -64,24 +64,29 @@ def model_artifacts_exist():
 def init_log_files():
     os.makedirs("logs", exist_ok=True)
 
-    log_specs = {
-        "logs/confidence_log.csv": "timestamp,signal,confidence,rsi,price,source\n",
-        "logs/trade_log.csv": "Time,Signal,Price,Action,PnL,Balance\n",
-        "logs/virtual_positions.csv": "timestamp,entry_time,signal,entry_price,exit_price,pnl_percent,balance_after\n",
-        "logs/daily_log.txt": "# Daily Trade Summary Log\n\n"
-    }
+    # Confidence Log
+    confidence_path = "logs/confidence_log.csv"
+    if not os.path.exists(confidence_path) or os.path.getsize(confidence_path) == 0:
+        with open(confidence_path, "w") as f:
+            f.write("timestamp,signal,confidence,rsi,price,source\n")
 
-    for path, header in log_specs.items():
-        if not os.path.exists(path) or os.path.getsize(path) == 0:
-            with open(path, "w") as f:
-                f.write(header)
+    # Trade Log
+    trade_log_path = "logs/trade_log.csv"
+    if not os.path.exists(trade_log_path) or os.path.getsize(trade_log_path) == 0:
+        with open(trade_log_path, "w") as f:
+            f.write("Time,Signal,Price,Action,PnL,Balance\n")
 
-# === Inject Test Row into Virtual Positions (for dashboard init) ===
+    # Virtual Position Log
+    position_log_path = "logs/virtual_positions.csv"
+    if not os.path.exists(position_log_path) or os.path.getsize(position_log_path) == 0:
+        with open(position_log_path, "w") as f:
+            f.write("timestamp,entry_time,signal,entry_price,exit_price,pnl_percent,balance_after\n")
+
+# === Inject Virtual Test Row ===
 def inject_virtual_trade_test_row():
     path = "logs/virtual_positions.csv"
     if not os.path.exists(path):
         return
-
     try:
         df = pd.read_csv(path)
         if df.shape[0] == 0:
@@ -100,55 +105,43 @@ def inject_virtual_trade_test_row():
     except Exception as e:
         print(f"⚠️ Could not insert test row: {e}")
 
-# === Write a Daily Log Summary to File ===
-def write_daily_log():
-    path = "logs/virtual_positions.csv"
-    if not os.path.exists(path):
-        return
-
+# === Daily Summary Log ===
+def generate_daily_summary_log():
     try:
-        df = pd.read_csv(path, parse_dates=['timestamp'])
+        df = pd.read_csv("logs/virtual_positions.csv")
+        if df.empty:
+            print("📭 No virtual position data found.")
+            return
+
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
         today = datetime.utcnow().date()
         today_trades = df[df['timestamp'].dt.date == today]
 
         if today_trades.empty:
+            print("📭 No trades today to summarize.")
             return
 
-        summary = f"\n[{datetime.utcnow().strftime('%Y-%m-%d')}]\n"
-        summary += f"Total Trades: {len(today_trades)}\n"
-        summary += f"Avg PnL: {today_trades['pnl_percent'].mean():.2f}%\n"
-        summary += f"Win Rate: {(today_trades['pnl_percent'] > 0).mean() * 100:.1f}%\n"
+        avg_pnl = today_trades['pnl_percent'].mean()
+        win_rate = (today_trades['pnl_percent'] > 0).mean() * 100
+        trades = len(today_trades)
+        balance_end = today_trades['balance_after'].iloc[-1]
 
-        with open("logs/daily_log.txt", "a") as f:
-            f.write(summary)
-
-    except Exception as e:
-        print(f"❌ Failed to write daily log: {e}")
-
-def generate_daily_summary_log():
-    try:
-        df = pd.read_csv("logs/virtual_positions.csv", parse_dates=["timestamp"])
-        if df.empty:
-            print("📭 No trades to summarize.")
-            return
-
-        df['date'] = df['timestamp'].dt.date
-        summary = df.groupby('date').agg({
-            'pnl_percent': ['count', 'mean', lambda x: (x > 0).mean() * 100]
-        })
-        summary.columns = ['Trades', 'Avg_PnL(%)', 'Win_Rate(%)']
-        summary.reset_index(inplace=True)
-
+        summary = f"""
+📘 Daily Summary Log ({today})
+──────────────────────────────
+📊 Trades: {trades}
+📈 Avg PnL: {avg_pnl:.2f}%
+🏆 Win Rate: {win_rate:.2f}%
+💰 Final Balance: ${balance_end:.2f}
+"""
         log_path = "logs/daily_log.txt"
-        with open(log_path, "w") as f:
-            f.write("📅 Daily Trading Summary\n")
-            f.write("──────────────────────────────\n")
-            for _, row in summary.iterrows():
-                f.write(
-                    f"{row['date']} | Trades: {int(row['Trades'])} | "
-                    f"Avg PnL: {row['Avg_PnL(%)']:.2f}% | "
-                    f"Win Rate: {row['Win_Rate(%)']:.2f}%\n"
-                )
-        print("✅ Daily summary written to logs/daily_log.txt")
+        with open(log_path, "a") as f:
+            f.write(summary + "\n")
+
+        print(summary)
+        print("✅ Daily summary saved to logs/daily_log.txt")
+
+        # v1.5+ queue: send this summary to Telegram via send_alert()
+
     except Exception as e:
         print(f"❌ Failed to generate daily log: {e}")
