@@ -1,3 +1,80 @@
+# 🤖 CryptoFuturesML v1.0
+
+A production-grade crypto futures trading system built with LSTM + sentiment analysis.  
+Optimized for transparency, modularity, and personal deployment on a VPS.
+
+---
+
+## 📦 Features (v1.0)
+- ✅ Real-time BTC/USDT signal generation
+- ✅ LSTM model (.keras) with confidence scoring
+- ✅ RSI + EMA + MACD technical indicators
+- ✅ Twitter sentiment (with fallback)
+- ✅ Smart filtering logic before entry
+- ✅ Paper trading engine + Testnet integration
+- ✅ Virtual position tracker (`logs/virtual_positions.csv`)
+- ✅ PnL & win rate dashboard (`Option 4`)
+- ✅ Full CLI interface
+- ✅ Telegram Alerts (entry/exit/confidence)
+- ✅ Confidence logging and plotting (Options 6 & 7)
+- ✅ Daily summary log (`daily_log.txt`)
+
+---
+
+## 🚀 Quickstart
+
+```bash
+cd CryptoFuturesML_Stable_v1
+python main.py
+```
+
+## 🧠 System Overview
+
+| Component               | Description                                     |
+|------------------------|-------------------------------------------------|
+| `main.py`              | Entry point CLI for all actions                 |
+| `src/`                 | Core modules: prediction, trading, logging      |
+| `logs/`                | Trade, confidence, and virtual position logs    |
+| `models/`              | Saved LSTM model and scaler                     |
+| `.env`                 | Stores Binance, Twitter, Telegram credentials   |
+
+---
+
+## 🛠️ Requirements
+
+- Python 3.10+
+- `tensorflow`, `pandas`, `matplotlib`, `python-telegram-bot`, `ccxt`
+- `.env` file with these:
+  ```
+  TELEGRAM_BOT_TOKEN=xxx
+  TELEGRAM_CHAT_ID=yyy
+  BINANCE_TEST_API_KEY=zzz
+  BINANCE_TEST_API_SECRET=zzz
+  TWITTER_BEARER_TOKEN=zzz
+  ```
+
+---
+
+## ✅ How to Deploy
+
+```bash
+# Pull latest repo or push from VS Code
+git pull
+
+# Activate environment (if needed)
+source venv/bin/activate
+
+# Launch system
+python main.py
+```
+
+---
+
+## 🔐 License
+
+MIT License  
+Generated on 2025-03-29 by CryptoFuturesML
+
 # CryptoFuturesML 🚀
 
 A professional-grade, home-deployable crypto futures machine learning trading system.
