@@ -12,9 +12,10 @@ def analyze_performance():
         return
 
     try:
-        # ✅ Check if file is completely empty
-        if os.path.getsize(TRADE_LOG_PATH) == 0:
-            print("⚠️ Trade log file is empty.")
+        df = pd.read_csv(TRADE_LOG_PATH)
+
+        if df.empty or len(df.columns) < 6:
+            print("⚠️ Trade log is empty or incomplete.")
             return
 
         df = pd.read_csv(TRADE_LOG_PATH)

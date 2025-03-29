@@ -13,12 +13,20 @@ def plot_confidence_over_time():
         return
 
     try:
-        df = pd.read_csv(CONFIDENCE_LOG_PATH, usecols=["timestamp", "confidence", "signal"])
+        df = pd.read_csv(CONFIDENCE_LOG_PATH)
+
         if df.empty:
             print("⚠️ Confidence log is empty.")
             return
 
-        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        if 'timestamp' not in df.columns or 'confidence' not in df.columns:
+            print("❌ Required columns missing in confidence log.")
+            return
+
+        df = df[df['confidence'].apply(lambda x: isinstance(x, (int, float, str)))]
+        df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
+        df['confidence'] = pd.to_numeric(df['confidence'], errors='coerce')
+        df = df.dropna(subset=['timestamp', 'confidence'])
 
         plt.figure(figsize=(10, 5))
         plt.plot(df['timestamp'], df['confidence'], label='Confidence')
@@ -41,8 +49,9 @@ def plot_signal_distribution():
         return
 
     try:
-        df = pd.read_csv(CONFIDENCE_LOG_PATH, usecols=["signal"])
-        if df.empty:
+        df = pd.read_csv(CONFIDENCE_LOG_PATH)
+
+        if df.empty or 'signal' not in df.columns:
             print("⚠️ No signal data available.")
             return
 
