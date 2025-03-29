@@ -5,14 +5,16 @@ import sys
 import time
 import subprocess
 from datetime import datetime
+import os
 
 # Core components from your trading system
 from src.live_trading_engine import predict_and_trade         # Makes predictions & optionally logs simulated trades
 from src.retraining_pipeline import retrain_pipeline          # Retrains your model using updated data
-from src.trade_analyzer import analyze_performance            # 📊 Trade log analysis for Option 3
+from src.trade_analyzer import analyze_trade_log              # 📊 Trade log analysis for Option 3
 from src.market_data_collector import fetch_ohlcv             # Grabs latest OHLCV price data
 from src.position_manager import handle_signal                # Manages simulated trade entry/exit
 from src.cli_dashboard import display_dashboard               # Displays trading stats in terminal
+from src.utils import ensure_trade_log_exists                 # Ensures trade log file is initialized
 
 # Interval between live loop cycles (in seconds) — 5 minutes = 300s
 INTERVAL_SECONDS = 300
@@ -30,6 +32,26 @@ def check_git_sync():
             print("✅ Git is up to date with origin/main.")
     except Exception as e:
         print(f"❌ Git sync check failed: {e}")
+
+# ✅ Startup file check before sensitive operations
+def check_model_and_scaler():
+    try:
+        model_path_file = "models/model_latest_path.txt"
+        if not os.path.exists(model_path_file):
+            raise FileNotFoundError("❌ model_latest_path.txt not found.")
+        with open(model_path_file, "r") as f:
+            model_path = f.read().strip()
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"❌ Model file not found at: {model_path}")
+
+        scalers = [f for f in os.listdir("models/") if f.endswith(".save")]
+        if not scalers:
+            raise FileNotFoundError("❌ No scaler file (.save) found in models directory.")
+
+        print("✅ Model and scaler check passed.")
+    except Exception as e:
+        print(f"❌ Startup check failed: {e}")
+        sys.exit()
 
 # 📋 Menu displayed in terminal when script is run
 def menu():
@@ -49,17 +71,14 @@ def run_live_loop():
         try:
             print(f"\n⏳ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} — Running cycle...")
             signal, confidence = predict_and_trade(return_result=True)
-
             if signal in ["LONG", "SHORT"]:
                 df = fetch_ohlcv(limit=1)
                 current_price = df['close'].iloc[-1]
                 handle_signal(signal=signal, price=current_price)
             else:
                 print(f"🔍 No actionable signal: {signal} (confidence: {confidence:.2%})")
-
             display_dashboard()
             time.sleep(INTERVAL_SECONDS)
-
         except KeyboardInterrupt:
             print("\n🛑 Live loop stopped by user.")
             break
@@ -69,6 +88,9 @@ def run_live_loop():
 
 # 🚀 Entry point: interactive command-line system menu
 def main():
+    ensure_trade_log_exists()   # ✅ Make sure trade_log.csv exists
+    check_model_and_scaler()   # ✅ Sanity check for model/scaler
+
     while True:
         choice = menu()
         if choice == '1':
@@ -80,7 +102,7 @@ def main():
             retrain_pipeline()
         elif choice == '3':
             print("\n📊 Analyzing trade performance...")
-            analyze_performance()
+            analyze_trade_log()
         elif choice == '4':
             run_live_loop()
         elif choice == '5':

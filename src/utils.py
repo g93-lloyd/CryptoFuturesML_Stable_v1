@@ -7,6 +7,7 @@ import time
 import functools
 import random
 
+# 🔍 Logs model prediction decisions for auditing or later analysis
 def log_prediction(signal, confidence, rsi, price, source="live"):
     os.makedirs("logs", exist_ok=True)
     log_path = "logs/prediction_log.csv"
@@ -25,6 +26,7 @@ def log_prediction(signal, confidence, rsi, price, source="live"):
     else:
         new_row.to_csv(log_path, index=False)
 
+# 🛡️ Retry wrapper for resilient external calls (e.g., API or data fetches)
 def retry(max_attempts=3, delay=2, backoff=2, jitter=True, logger=None):
     def decorator(func):
         @functools.wraps(func)
@@ -45,3 +47,11 @@ def retry(max_attempts=3, delay=2, backoff=2, jitter=True, logger=None):
                     current_delay *= backoff
         return wrapper
     return decorator
+
+# ✅ Ensures trade_log.csv exists with correct headers to prevent dashboard/analyzer crashes
+def ensure_trade_log_exists():
+    log_path = "logs/trade_log.csv"
+    if not os.path.exists(log_path):
+        os.makedirs("logs", exist_ok=True)
+        with open(log_path, "w") as f:
+            f.write("Time,Signal,Price,Action,PnL,Balance\n")
