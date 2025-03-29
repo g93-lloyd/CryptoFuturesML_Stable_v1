@@ -10,7 +10,7 @@ import pandas as pd
 # Core components
 from src.live_trading_engine import predict_and_trade
 from src.retraining_pipeline import retrain_pipeline
-from src.trade_analyzer import analyze_trade_log
+from src.trade_analyzer import analyze_performance
 from src.market_data_collector import fetch_ohlcv
 from src.position_manager import handle_signal, log_position
 from src.cli_dashboard import display_dashboard
@@ -132,7 +132,7 @@ def main():
             retrain_pipeline()
         elif choice == '3':
             print("\n📊 Analyzing trade performance...")
-            analyze_trade_log()
+            analyze_performance()
         elif choice == '4':
             run_live_loop()
         elif choice == '5':
