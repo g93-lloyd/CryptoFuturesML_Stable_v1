@@ -5,35 +5,37 @@ import time
 import subprocess
 from datetime import datetime
 
-from src.live_trading_engine import predict_and_trade         # 🔮 Predict & trade (live)
-from src.retraining_pipeline import retrain_pipeline          # 🧠 Retrain model
-from src.monitoring import analyze_performance                # 📊 Analyze trade logs
-from src.market_data_collector import fetch_ohlcv             # 📈 Market data fetcher
-from src.position_manager import handle_signal                # 💼 Trade simulation logic
-from src.cli_dashboard import display_dashboard               # 📟 CLI trading dashboard
-from src.confidence_visualizer import (                       # 📊 Confidence insights
+# Core pipeline modules
+from src.live_trading_engine import predict_and_trade
+from src.retraining_pipeline import retrain_pipeline
+from src.monitoring import analyze_performance
+from src.market_data_collector import fetch_ohlcv
+from src.position_manager import handle_signal
+from src.cli_dashboard import display_dashboard
+from src.confidence_visualizer import (
     plot_confidence_over_time,
     plot_signal_distribution
 )
-from src.utils import model_artifacts_exist                   # ✅ Model safety check
+from src.utils import model_artifacts_exist, init_log_files  # ✅ Auto-log setup
 
+# Interval between loop executions
 INTERVAL_SECONDS = 300  # 5 minutes
 
-# ✅ Git Sync Check
+# ✅ Git sync check
 def check_git_sync():
     try:
         subprocess.run(["git", "fetch", "origin"], check=True)
         status = subprocess.check_output(["git", "status", "-uno"]).decode()
         if "behind" in status:
-            print("⚠️ WARNING: Local branch is behind origin/main. Run `git-resync`.")
+            print("⚠️ WARNING: Local branch is behind origin/main. Run `git-resync` to sync before retraining.")
         elif "diverged" in status:
-            print("❌ ERROR: Git branches have diverged. Manual merge needed.")
+            print("❌ ERROR: Local and remote have diverged. Run manual conflict resolution.")
         else:
             print("✅ Git is up to date with origin/main.")
     except Exception as e:
         print(f"❌ Git sync check failed: {e}")
 
-# 📋 CLI Menu
+# 🧠 Main CLI Menu
 def menu():
     print("\n🧠 Crypto Futures ML System")
     print("────────────────────────────")
@@ -46,18 +48,19 @@ def menu():
     print("7️⃣  Show Signal Distribution")
     return input("Select an option (1-7): ")
 
-# 🔄 Auto Trading Loop
+# 🔁 Continuous loop for automation
 def run_live_loop():
     print("🚀 Starting automated live loop (CTRL+C to stop)\n")
     while True:
         try:
             print(f"\n⏳ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} — Running cycle...")
+
             signal, confidence = predict_and_trade(return_result=True)
 
             if signal in ["LONG", "SHORT"]:
                 df = fetch_ohlcv(limit=1)
-                price = df['close'].iloc[-1]
-                handle_signal(signal=signal, price=price)
+                current_price = df['close'].iloc[-1]
+                handle_signal(signal=signal, price=current_price)
             else:
                 print(f"🔍 No actionable signal: {signal} (confidence: {confidence:.2%})")
 
@@ -71,13 +74,13 @@ def run_live_loop():
             print(f"❌ Loop error: {e}")
             time.sleep(INTERVAL_SECONDS)
 
-# 🚀 Main Entry
-
+# 🚀 Entry point
 def main():
-    if not model_artifacts_exist():
-        print("❌ Missing model or scaler. Run option 2 to retrain first.")
-        return
+    init_log_files()  # ✅ Auto-create all needed logs if missing
 
+    if not model_artifacts_exist():
+        print("⚠️ Missing model or scaler. Run option 2 to retrain.")
+    
     while True:
         choice = menu()
         if choice == '1':
@@ -104,5 +107,6 @@ def main():
         else:
             print("❌ Invalid choice. Try again.")
 
+# Run program
 if __name__ == "__main__":
     main()

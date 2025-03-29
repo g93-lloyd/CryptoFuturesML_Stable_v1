@@ -7,34 +7,26 @@ import time
 import functools
 import random
 
+# === Log predictions to CSV ===
 def log_prediction(signal, confidence, rsi, price, source="live"):
-    if signal not in ["LONG", "SHORT", "HOLD", "FILTERED"]:
-        print(f"⚠️ Invalid signal: {signal}. Not logging.")
-        return
-
     os.makedirs("logs", exist_ok=True)
     log_path = "logs/confidence_log.csv"
 
-    try:
-        new_row = pd.DataFrame([{
-            "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
-            "signal": signal,
-            "confidence": round(confidence, 4),
-            "rsi": round(rsi, 2),
-            "price": round(price, 2),
-            "source": source
-        }])
+    new_row = pd.DataFrame([{
+        "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+        "signal": signal,
+        "confidence": round(confidence, 4),
+        "rsi": round(rsi, 2),
+        "price": round(price, 2),
+        "source": source
+    }])
 
-        if os.path.exists(log_path):
-            new_row.to_csv(log_path, mode="a", header=False, index=False)
-        else:
-            new_row.to_csv(log_path, index=False)
+    if not os.path.exists(log_path):
+        new_row.to_csv(log_path, index=False)
+    else:
+        new_row.to_csv(log_path, mode="a", header=False, index=False)
 
-    except Exception as e:
-        print(f"❌ Failed to log prediction: {e}")
-
-
-# ✅ Retry wrapper for fault-tolerant ops
+# === Retry Decorator for Robustness ===
 def retry(max_attempts=3, delay=2, backoff=2, jitter=True, logger=None):
     def decorator(func):
         @functools.wraps(func)
@@ -56,23 +48,36 @@ def retry(max_attempts=3, delay=2, backoff=2, jitter=True, logger=None):
         return wrapper
     return decorator
 
-# ✅ Model & Scaler Safety Check
+# === Safety check for critical files ===
 def model_artifacts_exist():
-    try:
-        model_path_file = "models/model_latest_path.txt"
-        if not os.path.exists(model_path_file):
-            print("❌ model_latest_path.txt not found.")
-            return False
-        with open(model_path_file, "r") as f:
-            model_path = f.read().strip()
-        if not os.path.exists(model_path):
-            print(f"❌ Model file not found at {model_path}")
-            return False
-        scalers = [f for f in os.listdir("models") if f.endswith(".save")]
-        if not scalers:
-            print("❌ No scaler file found.")
-            return False
-        return True
-    except Exception as e:
-        print(f"❌ Model artifact check failed: {e}")
+    model_path = "models/model_latest_path.txt"
+    if not os.path.exists(model_path):
         return False
+    with open(model_path, "r") as f:
+        model_file = f.read().strip()
+    if not os.path.exists(model_file):
+        return False
+    scaler_found = any(f.endswith(".save") for f in os.listdir("models/"))
+    return scaler_found
+
+# === Log File Initialization ===
+def init_log_files():
+    os.makedirs("logs", exist_ok=True)
+
+    # Confidence Log
+    confidence_path = "logs/confidence_log.csv"
+    if not os.path.exists(confidence_path) or os.path.getsize(confidence_path) == 0:
+        with open(confidence_path, "w") as f:
+            f.write("timestamp,signal,confidence,rsi,price,source\n")
+
+    # Trade Log
+    trade_log_path = "logs/trade_log.csv"
+    if not os.path.exists(trade_log_path) or os.path.getsize(trade_log_path) == 0:
+        with open(trade_log_path, "w") as f:
+            f.write("Time,Signal,Price,Action,PnL,Balance\n")
+
+    # Virtual Position Log
+    position_log_path = "logs/virtual_positions.csv"
+    if not os.path.exists(position_log_path) or os.path.getsize(position_log_path) == 0:
+        with open(position_log_path, "w") as f:
+            f.write("timestamp,entry_time,signal,entry_price,exit_price,pnl_percent,balance_after\n")
