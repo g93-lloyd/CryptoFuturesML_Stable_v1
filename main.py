@@ -4,38 +4,58 @@ import sys
 import time
 import subprocess
 from datetime import datetime
+import os
+import pandas as pd
 
-# Core pipeline modules
+# Core components
 from src.live_trading_engine import predict_and_trade
 from src.retraining_pipeline import retrain_pipeline
-from src.monitoring import analyze_performance
+from src.trade_analyzer import analyze_trade_log
 from src.market_data_collector import fetch_ohlcv
-from src.position_manager import handle_signal
+from src.position_manager import handle_signal, log_position
 from src.cli_dashboard import display_dashboard
 from src.confidence_visualizer import (
     plot_confidence_over_time,
     plot_signal_distribution
 )
-from src.utils import model_artifacts_exist, init_log_files  # ✅ Auto-log setup
+from src.utils import model_artifacts_exist, init_log_files
 
-# Interval between loop executions
 INTERVAL_SECONDS = 300  # 5 minutes
 
-# ✅ Git sync check
+# ✅ Git Sync Checker
 def check_git_sync():
     try:
         subprocess.run(["git", "fetch", "origin"], check=True)
         status = subprocess.check_output(["git", "status", "-uno"]).decode()
         if "behind" in status:
-            print("⚠️ WARNING: Local branch is behind origin/main. Run `git-resync` to sync before retraining.")
+            print("⚠️ WARNING: Local branch is behind origin/main.")
         elif "diverged" in status:
-            print("❌ ERROR: Local and remote have diverged. Run manual conflict resolution.")
+            print("❌ ERROR: Local and remote have diverged.")
         else:
-            print("✅ Git is up to date with origin/main.")
+            print("✅ Git is up to date.")
     except Exception as e:
         print(f"❌ Git sync check failed: {e}")
 
-# 🧠 Main CLI Menu
+# ✅ Optional: Inject test row only if needed
+def inject_test_virtual_trade_if_empty():
+    log_path = "logs/virtual_positions.csv"
+    if os.path.exists(log_path):
+        df = pd.read_csv(log_path)
+        if df.empty:
+            log_position({
+                "timestamp": datetime.utcnow(),
+                "entry_time": datetime.utcnow(),
+                "signal": "LONG",
+                "entry_price": 65000.0,
+                "exit_price": 65200.0,
+                "pnl_percent": 0.31,
+                "balance_after": 10310.0
+            })
+            print("🧪 Test trade injected to logs/virtual_positions.csv.")
+    else:
+        print("⚠️ Trade log file missing — unable to inject test trade.")
+
+# CLI Menu
 def menu():
     print("\n🧠 Crypto Futures ML System")
     print("────────────────────────────")
@@ -48,18 +68,17 @@ def menu():
     print("7️⃣  Show Signal Distribution")
     return input("Select an option (1-7): ")
 
-# 🔁 Continuous loop for automation
+# 🔁 Live Loop Mode
 def run_live_loop():
-    print("🚀 Starting automated live loop (CTRL+C to stop)\n")
+    print("🚀 Starting live loop (CTRL+C to stop)\n")
     while True:
         try:
             print(f"\n⏳ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} — Running cycle...")
-
             signal, confidence = predict_and_trade(return_result=True)
 
             if signal in ["LONG", "SHORT"]:
                 df = fetch_ohlcv(limit=1)
-                current_price = df['close'].iloc[-1]
+                current_price = df["close"].iloc[-1]
                 handle_signal(signal=signal, price=current_price)
             else:
                 print(f"🔍 No actionable signal: {signal} (confidence: {confidence:.2%})")
@@ -76,11 +95,17 @@ def run_live_loop():
 
 # 🚀 Entry point
 def main():
-    init_log_files()  # ✅ Auto-create all needed logs if missing
+    # ✅ Check logs exist
+    init_log_files()
 
+    # ✅ Check model/scaler exists
     if not model_artifacts_exist():
-        print("⚠️ Missing model or scaler. Run option 2 to retrain.")
-    
+        print("❌ Missing model or scaler. Run Option 2 to retrain first.")
+        return
+
+    # ✅ Optional: inject fake trade row if needed
+    inject_test_virtual_trade_if_empty()
+
     while True:
         choice = menu()
         if choice == '1':
@@ -92,7 +117,7 @@ def main():
             retrain_pipeline()
         elif choice == '3':
             print("\n📊 Analyzing trade performance...")
-            analyze_performance()
+            analyze_trade_log()
         elif choice == '4':
             run_live_loop()
         elif choice == '5':
@@ -107,6 +132,5 @@ def main():
         else:
             print("❌ Invalid choice. Try again.")
 
-# Run program
 if __name__ == "__main__":
     main()
