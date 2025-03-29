@@ -8,51 +8,49 @@ SUMMARY_LOG_PATH = "logs/performance_summary.txt"
 
 def analyze_performance():
     if not os.path.exists(TRADE_LOG_PATH):
-        print("⚠️ Trade log file not found.")
+        print("⚠️ No trade log file found.")
         return
 
     try:
         df = pd.read_csv(TRADE_LOG_PATH)
 
-        if df.empty or 'pnl_percent' not in df.columns:
-            print("⚠️ Trade log is empty or missing 'pnl_percent'.")
+        if df.empty or len(df) < 2:
+            print("⚠️ Not enough trade data to analyze.")
             return
 
-        # ✅ Handle datetime safely
-        if 'timestamp' not in df.columns:
-            if 'entry_time' in df.columns:
-                df['timestamp'] = pd.to_datetime(df['entry_time'], errors='coerce')
-            else:
-                df['timestamp'] = pd.Timestamp.now()
+        # Ensure timestamp column is datetime
+        if "timestamp" not in df.columns or "entry_time" not in df.columns:
+            print("⚠️ Required columns missing from trade log.")
+            return
 
-        # Clean missing/invalid timestamps
-        df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
-        df.dropna(subset=['timestamp'], inplace=True)
+        df["timestamp"] = pd.to_datetime(df["timestamp"])
+        df["entry_time"] = pd.to_datetime(df["entry_time"])
 
         wins = df[df["pnl_percent"] > 0]
         losses = df[df["pnl_percent"] < 0]
         total_trades = len(df)
         total_pnl = df["pnl_percent"].sum()
-        win_rate = len(wins) / total_trades * 100 if total_trades > 0 else 0
+        win_rate = len(wins) / total_trades * 100
         avg_win = wins["pnl_percent"].mean() if not wins.empty else 0
         avg_loss = losses["pnl_percent"].mean() if not losses.empty else 0
-        max_drawdown = df["pnl_percent"].min() if not df.empty else 0
+        max_drawdown = df["pnl_percent"].min()
 
         summary = f"""
 📊 Trade Performance Summary
 ────────────────────────────
 📈 Total Trades:       {total_trades}
-💰 Total PnL:          {total_pnl:.2f}%
+💰 Total PnL (%):      {total_pnl:.2f}%
 🏆 Win Rate:           {win_rate:.2f}%
 📊 Avg Win:            {avg_win:.2f}%
 📉 Avg Loss:           {avg_loss:.2f}%
 🔻 Max Drawdown:       {max_drawdown:.2f}%
 
-📝 Summary saved to: {SUMMARY_LOG_PATH}
+📝 Summary also saved to: {SUMMARY_LOG_PATH}
 """
 
         print(summary)
 
+        # Save to summary log
         os.makedirs("logs", exist_ok=True)
         with open(SUMMARY_LOG_PATH, "w") as f:
             f.write(summary)
