@@ -1,92 +1,92 @@
 # main.py
 
-from colorama import Fore, Style, init
-init(autoreset=True)
-
-import os
-import time
 from src.live_trading_engine import predict_and_trade
 from src.retraining_pipeline import retrain_pipeline
 from src.trade_analyzer import analyze_performance
 from src.cli_dashboard import display_dashboard
-from src.confidence_visualizer import plot_confidence_over_time, plot_signal_distribution
 from src.utils import (
     init_log_files,
-    model_artifacts_exist,
     inject_virtual_trade_test_row,
+    model_artifacts_exist,
     generate_daily_summary_log
 )
+from src.confidence_visualizer import (
+    plot_confidence_over_time,
+    plot_signal_distribution
+)
+from colorama import Fore, Style, init as colorama_init
+import time
 
-# === Constants ===
-INTERVAL_SECONDS = 900
-LIVE_LOOP_CYCLES = 3  # Default for testing convenience
+colorama_init(autoreset=True)
 
-# === Init safety ===
+# === INIT ON STARTUP ===
 init_log_files()
 inject_virtual_trade_test_row()
 
-def run_live_loop(cycles=LIVE_LOOP_CYCLES):
-    print(f"{Fore.YELLOW}🔁 Starting Live Loop ({cycles} cycles)...")
+# === MENU ===
+def print_menu():
+    print(Fore.CYAN + Style.BRIGHT + "\n🧠 Crypto Futures ML System")
+    print("────────────────────────────")
+    print("1️⃣  Run Live Prediction & Simulated Trade")
+    print("2️⃣  Retrain Model on Latest Data")
+    print("3️⃣  Analyze Trade Log Performance")
+    print("4️⃣  Start Full Automated Live Loop")
+    print("5️⃣  Exit")
+    print("6️⃣  Visualize Confidence Over Time")
+    print("7️⃣  Show Signal Distribution")
+    print("8️⃣  Generate Daily Summary Log")
+    print("────────────────────────────")
+
+def run_live_loop(cycles=3):
     for i in range(cycles):
-        print(f"{Fore.CYAN}🔄 Cycle {i+1} of {cycles} running...\n")
+        print(f"\n🔁 Live loop cycle {i+1}/{cycles}")
         predict_and_trade()
         display_dashboard()
-        time.sleep(INTERVAL_SECONDS)
-    print(f"{Fore.GREEN}✅ Live loop complete.\n")
+        time.sleep(5)
+    print(Fore.YELLOW + "\n🛑 Live loop completed. Returning to menu...")
 
 def main():
-    while True:
-        print(f"""{Fore.CYAN}
-🧠 Crypto Futures ML System
-{Style.RESET_ALL}────────────────────────────
-1️⃣  Run Live Prediction & Simulated Trade
-2️⃣  Retrain Model on Latest Data
-3️⃣  Analyze Trade Log Performance
-4️⃣  Start Full Automated Live Loop
-5️⃣  Exit
-6️⃣  Visualize Confidence Over Time
-7️⃣  Show Signal Distribution
-8️⃣  Generate Daily Summary Log
-────────────────────────────""")
+    if not model_artifacts_exist():
+        print(Fore.RED + "❌ Model or scaler artifacts not found. Please run Option 2 first to retrain.")
+        return
 
-        choice = input("Select an option (1-8): ").strip()
+    while True:
+        print_menu()
+        choice = input(Fore.GREEN + "Select an option (1-8): ")
 
         if choice == "1":
-            print(f"\n▶️ Running live prediction...\n")
+            print("\n▶️ Running live prediction...")
             predict_and_trade()
 
         elif choice == "2":
-            print(f"\n🔁 Retraining model...\n")
+            print("\n🔁 Retraining model...\n")
             retrain_pipeline()
 
         elif choice == "3":
-            print(f"\n📊 Analyzing trade performance...\n")
+            print("\n📊 Analyzing trade performance...")
             analyze_performance()
 
         elif choice == "4":
             run_live_loop()
 
         elif choice == "5":
-            print(f"{Fore.YELLOW}👋 Exiting... Stay profitable!\n")
+            print(Fore.MAGENTA + "\n👋 Exiting. Stay profitable!")
             break
 
         elif choice == "6":
-            print(f"\n📈 Confidence Trend...\n")
+            print("\n📈 Confidence Trend...")
             plot_confidence_over_time()
 
         elif choice == "7":
-            print(f"\n📊 Signal Type Breakdown...\n")
+            print("\n📊 Signal Type Breakdown...")
             plot_signal_distribution()
 
         elif choice == "8":
-            print(f"\n🧾 Generating Daily Summary Log...\n")
+            print("\n📝 Generating Daily Summary Log...")
             generate_daily_summary_log()
 
         else:
-            print(f"{Fore.RED}❌ Invalid choice. Try again.\n")
+            print(Fore.RED + "❌ Invalid option. Please choose between 1 and 8.")
 
 if __name__ == "__main__":
-    if not model_artifacts_exist():
-        print(f"{Fore.RED}❌ Required model/scaler artifacts not found. Please retrain first (Option 2).")
-    else:
-        main()
+    main()
