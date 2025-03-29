@@ -13,20 +13,12 @@ def plot_confidence_over_time():
         return
 
     try:
-        df = pd.read_csv(CONFIDENCE_LOG_PATH)
-
+        df = pd.read_csv(CONFIDENCE_LOG_PATH, usecols=["timestamp", "confidence", "signal"])
         if df.empty:
             print("⚠️ Confidence log is empty.")
             return
 
-        if 'timestamp' not in df.columns or 'confidence' not in df.columns:
-            print("❌ Required columns missing in confidence log.")
-            return
-
-        df = df[df['confidence'].apply(lambda x: isinstance(x, (int, float, str)))]
-        df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
-        df['confidence'] = pd.to_numeric(df['confidence'], errors='coerce')
-        df = df.dropna(subset=['timestamp', 'confidence'])
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
 
         plt.figure(figsize=(10, 5))
         plt.plot(df['timestamp'], df['confidence'], label='Confidence')
@@ -38,9 +30,15 @@ def plot_confidence_over_time():
         plt.legend()
         plt.grid(True)
         plt.tight_layout()
-        plt.show()
+
+        os.makedirs("logs/plots", exist_ok=True)
+        path = "logs/plots/confidence_over_time.png"
+        plt.savefig(path)
+        print(f"📊 Saved: {path}")
+
     except Exception as e:
         print(f"❌ Plotting failed: {e}")
+
 
 # === Plot Signal Frequency ===
 def plot_signal_distribution():
@@ -49,9 +47,8 @@ def plot_signal_distribution():
         return
 
     try:
-        df = pd.read_csv(CONFIDENCE_LOG_PATH)
-
-        if df.empty or 'signal' not in df.columns:
+        df = pd.read_csv(CONFIDENCE_LOG_PATH, usecols=["signal"])
+        if df.empty:
             print("⚠️ No signal data available.")
             return
 
@@ -64,6 +61,12 @@ def plot_signal_distribution():
         plt.xticks(rotation=0)
         plt.tight_layout()
         plt.grid(axis="y")
-        plt.show()
+
+        os.makedirs("logs/plots", exist_ok=True)
+        path = "logs/plots/signal_distribution.png"
+        plt.savefig(path)
+        print(f"📊 Saved: {path}")
+
     except Exception as e:
         print(f"❌ Signal plot failed: {e}")
+

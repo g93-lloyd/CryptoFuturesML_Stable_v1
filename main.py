@@ -19,7 +19,6 @@ from src.confidence_visualizer import (
     plot_signal_distribution
 )
 from src.utils import model_artifacts_exist, init_log_files   # ✅ Model safety + log initialization
-from src.utils import inject_virtual_trade_test_row
 
 # Interval between live loop cycles (in seconds) — 5 minutes = 300s
 INTERVAL_SECONDS = 300
@@ -86,6 +85,7 @@ def run_live_loop(max_cycles=3):
 
 # Inject test trade rows if logs are empty
 def inject_test_virtual_trade_if_empty():
+    from src.utils import inject_virtual_trade_test_row
     inject_virtual_trade_test_row()
 
 # 🚀 Entry point: interactive command-line system menu
@@ -106,7 +106,7 @@ def main():
             retrain_pipeline()
         elif choice == '3':
             print("\n📊 Analyzing trade performance...")
-            analyze_performance
+            analyze_performance()
         elif choice == '4':
             try:
                 loops = int(input("🔁 How many cycles to run? (Default = 3): ") or 3)
