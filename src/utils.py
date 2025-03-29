@@ -124,3 +124,31 @@ def write_daily_log():
 
     except Exception as e:
         print(f"❌ Failed to write daily log: {e}")
+
+def generate_daily_summary_log():
+    try:
+        df = pd.read_csv("logs/virtual_positions.csv", parse_dates=["timestamp"])
+        if df.empty:
+            print("📭 No trades to summarize.")
+            return
+
+        df['date'] = df['timestamp'].dt.date
+        summary = df.groupby('date').agg({
+            'pnl_percent': ['count', 'mean', lambda x: (x > 0).mean() * 100]
+        })
+        summary.columns = ['Trades', 'Avg_PnL(%)', 'Win_Rate(%)']
+        summary.reset_index(inplace=True)
+
+        log_path = "logs/daily_log.txt"
+        with open(log_path, "w") as f:
+            f.write("📅 Daily Trading Summary\n")
+            f.write("──────────────────────────────\n")
+            for _, row in summary.iterrows():
+                f.write(
+                    f"{row['date']} | Trades: {int(row['Trades'])} | "
+                    f"Avg PnL: {row['Avg_PnL(%)']:.2f}% | "
+                    f"Win Rate: {row['Win_Rate(%)']:.2f}%\n"
+                )
+        print("✅ Daily summary written to logs/daily_log.txt")
+    except Exception as e:
+        print(f"❌ Failed to generate daily log: {e}")

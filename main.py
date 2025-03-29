@@ -1,117 +1,92 @@
-# main.py — Unified Command + Live Automation Loop
+# main.py
 
-# Built-in modules
-import sys
-import time
-import subprocess
-from datetime import datetime
 from colorama import Fore, Style, init
 init(autoreset=True)
 
-# === System Imports ===
+import os
+import time
 from src.live_trading_engine import predict_and_trade
 from src.retraining_pipeline import retrain_pipeline
-from src.monitoring import analyze_performance
-from src.market_data_collector import fetch_ohlcv
-from src.position_manager import handle_signal
+from src.trade_analyzer import analyze_performance
 from src.cli_dashboard import display_dashboard
-from src.utils import model_artifacts_exist, init_log_files, inject_virtual_trade_test_row
 from src.confidence_visualizer import plot_confidence_over_time, plot_signal_distribution
-from src.telegram_alerts import send_alert
+from src.utils import (
+    init_log_files,
+    model_artifacts_exist,
+    inject_virtual_trade_test_row,
+    generate_daily_summary_log
+)
 
-# === Loop Control ===
-INTERVAL_SECONDS = 300  # 5 min
-DEFAULT_CYCLES = 3      # Auto-run limit unless changed manually
+# === Constants ===
+INTERVAL_SECONDS = 900
+LIVE_LOOP_CYCLES = 3  # Default for testing convenience
 
-# ✅ Git sync check
-def check_git_sync():
-    try:
-        subprocess.run(["git", "fetch", "origin"], check=True)
-        status = subprocess.check_output(["git", "status", "-uno"]).decode()
-        if "behind" in status:
-            print("⚠️ WARNING: Local branch is behind origin/main. Run `git-resync` to sync before retraining.")
-        elif "diverged" in status:
-            print("❌ ERROR: Local and remote have diverged. Run manual conflict resolution.")
-        else:
-            print("✅ Git is up to date with origin/main.")
-    except Exception as e:
-        print(f"❌ Git sync check failed: {e}")
+# === Init safety ===
+init_log_files()
+inject_virtual_trade_test_row()
 
-# 📋 Main menu
-def menu():
-    print(Fore.CYAN + "\n🧠 Crypto Futures ML System")
-    print(Fore.LIGHTBLACK_EX + "────────────────────────────")
-    print(Fore.YELLOW + "1️⃣  Run Live Prediction & Simulated Trade")
-    print("2️⃣  Retrain Model on Latest Data")
-    print("3️⃣  Analyze Trade Log Performance")
-    print("4️⃣  Start Full Automated Live Loop")
-    print("5️⃣  Exit")
-    print("6️⃣  Visualize Confidence Over Time")
-    print("7️⃣  Show Signal Distribution")
-    print(Fore.LIGHTBLACK_EX + "────────────────────────────")
-    return input(Fore.CYAN + "Select an option (1-7): ")
-
-# 🔄 Live Loop (Auto 3 cycles unless changed)
-def run_live_loop(cycles=DEFAULT_CYCLES):
-    print(Fore.CYAN + "🚀 Starting automated live loop (CTRL+C to stop)\n")
+def run_live_loop(cycles=LIVE_LOOP_CYCLES):
+    print(f"{Fore.YELLOW}🔁 Starting Live Loop ({cycles} cycles)...")
     for i in range(cycles):
-        try:
-            print(f"\n⏳ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} — Running cycle {i+1}/{cycles}")
-            signal, confidence = predict_and_trade(return_result=True)
+        print(f"{Fore.CYAN}🔄 Cycle {i+1} of {cycles} running...\n")
+        predict_and_trade()
+        display_dashboard()
+        time.sleep(INTERVAL_SECONDS)
+    print(f"{Fore.GREEN}✅ Live loop complete.\n")
 
-            if signal in ["LONG", "SHORT"]:
-                df = fetch_ohlcv(limit=1)
-                current_price = df['close'].iloc[-1]
-                handle_signal(signal=signal, price=current_price)
-            else:
-                print(f"🔍 No actionable signal: {signal} (confidence: {confidence:.2%})")
-
-            display_dashboard()
-            if i < cycles - 1:
-                time.sleep(INTERVAL_SECONDS)
-
-        except KeyboardInterrupt:
-            print("\n🛑 Live loop stopped by user.")
-            break
-        except Exception as e:
-            print(f"❌ Loop error: {e}")
-            time.sleep(INTERVAL_SECONDS)
-
-# 🧠 App entrypoint
 def main():
-    init_log_files()
-
-    if not model_artifacts_exist():
-        print("🚨 Model or scaler not found! Please run option 2 (Retrain Model) first.")
-        return
-
-    inject_virtual_trade_test_row()
-
     while True:
-        choice = menu()
-        if choice == '1':
-            print(Fore.GREEN + "\n▶️ Running live prediction...")
+        print(f"""{Fore.CYAN}
+🧠 Crypto Futures ML System
+{Style.RESET_ALL}────────────────────────────
+1️⃣  Run Live Prediction & Simulated Trade
+2️⃣  Retrain Model on Latest Data
+3️⃣  Analyze Trade Log Performance
+4️⃣  Start Full Automated Live Loop
+5️⃣  Exit
+6️⃣  Visualize Confidence Over Time
+7️⃣  Show Signal Distribution
+8️⃣  Generate Daily Summary Log
+────────────────────────────""")
+
+        choice = input("Select an option (1-8): ").strip()
+
+        if choice == "1":
+            print(f"\n▶️ Running live prediction...\n")
             predict_and_trade()
-        elif choice == '2':
-            print(Fore.MAGENTA + "\n🔁 Retraining model...")
-            check_git_sync()
-            retrain_pipeline()
-        elif choice == '3':
-            print(Fore.YELLOW + "\n📊 Analyzing trade performance...")
+
+        elif choice == "2":
+            print(f"\n🔁 Retraining model...\n")
+            run_retraining_pipeline()
+
+        elif choice == "3":
+            print(f"\n📊 Analyzing trade performance...\n")
             analyze_performance()
-        elif choice == '4':
+
+        elif choice == "4":
             run_live_loop()
-        elif choice == '5':
-            print(Fore.CYAN + "\n👋 Exiting. Goodbye!")
-            sys.exit()
-        elif choice == '6':
-            print(Fore.BLUE + "\n📈 Confidence Trend...")
+
+        elif choice == "5":
+            print(f"{Fore.YELLOW}👋 Exiting... Stay profitable!\n")
+            break
+
+        elif choice == "6":
+            print(f"\n📈 Confidence Trend...\n")
             plot_confidence_over_time()
-        elif choice == '7':
-            print(Fore.BLUE + "\n📊 Signal Type Breakdown...")
+
+        elif choice == "7":
+            print(f"\n📊 Signal Type Breakdown...\n")
             plot_signal_distribution()
+
+        elif choice == "8":
+            print(f"\n🧾 Generating Daily Summary Log...\n")
+            generate_daily_summary_log()
+
         else:
-            print(Fore.RED + "❌ Invalid choice. Try again.")
+            print(f"{Fore.RED}❌ Invalid choice. Try again.\n")
 
 if __name__ == "__main__":
-    main()
+    if not model_artifacts_exist():
+        print(f"{Fore.RED}❌ Required model/scaler artifacts not found. Please retrain first (Option 2).")
+    else:
+        main()
