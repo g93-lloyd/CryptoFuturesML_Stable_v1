@@ -2,7 +2,7 @@
 
 import os
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import functools
 import random
@@ -81,3 +81,28 @@ def init_log_files():
     if not os.path.exists(position_log_path) or os.path.getsize(position_log_path) == 0:
         with open(position_log_path, "w") as f:
             f.write("timestamp,entry_time,signal,entry_price,exit_price,pnl_percent,balance_after\n")
+
+
+def inject_virtual_trade_test_row():
+    """Inserts a default test row to virtual_positions.csv if it only has headers."""
+    path = "logs/virtual_positions.csv"
+    if not os.path.exists(path):
+        return
+
+    try:
+        df = pd.read_csv(path)
+        if df.shape[0] == 0:
+            now = datetime.utcnow()
+            test_row = pd.DataFrame([{
+                "timestamp": now,
+                "entry_time": now - timedelta(minutes=15),
+                "signal": "LONG",
+                "entry_price": 26000,
+                "exit_price": 26300,
+                "pnl_percent": 1.15,
+                "balance_after": 10115.0
+            }])
+            test_row.to_csv(path, mode="a", header=False, index=False)
+            print("✅ Inserted test row into virtual_positions.csv.")
+    except Exception as e:
+        print(f"⚠️ Could not insert test row: {e}")
