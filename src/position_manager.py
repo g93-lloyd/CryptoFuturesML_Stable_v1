@@ -23,6 +23,11 @@ position_state = {
 
 def log_position(entry):
     os.makedirs("logs", exist_ok=True)
+    
+    # Ensure timestamp exists
+    if "timestamp" not in entry:
+        entry["timestamp"] = datetime.utcnow()
+    
     df = pd.DataFrame([entry])
     if os.path.exists(POSITION_LOG):
         df.to_csv(POSITION_LOG, mode='a', header=False, index=False)
@@ -33,15 +38,14 @@ def handle_signal(signal, price, timestamp=None):
     global position_state
     timestamp = timestamp or datetime.utcnow()
 
-    # 🚫 Respect cooldown to prevent overtrading
+    # 🚫 Cooldown period
     if position_state["cooldown_until"] and timestamp < position_state["cooldown_until"]:
         print("⏳ In cooldown. Skipping trade.")
         return position_state
 
-    # ==== Entry logic ====
+    # ✅ Entry
     if not position_state["is_open"]:
         if signal in ["LONG", "SHORT"]:
-            # Update state with new open position
             position_state.update({
                 "is_open": True,
                 "type": signal,
@@ -50,7 +54,6 @@ def handle_signal(signal, price, timestamp=None):
                 "cooldown_until": None
             })
 
-            # 🧪 Place order on Binance Testnet (or skip if TRADE_LIVE = False)
             if TRADE_LIVE:
                 place_order("buy" if signal == "LONG" else "sell", amount=TRADE_AMOUNT)
 
@@ -59,33 +62,33 @@ def handle_signal(signal, price, timestamp=None):
             print("⚠️ HOLD signal. No open position.")
         return position_state
 
-    # ==== Exit logic ====
+    # ✅ Exit
     if (position_state["type"] == "LONG" and signal == "SHORT") or \
        (position_state["type"] == "SHORT" and signal == "LONG"):
 
         entry_price = position_state["entry_price"]
         position_type = position_state["type"]
 
-        # 📊 Calculate profit/loss
+        # 📊 Calculate PnL
         pnl = ((price - entry_price) / entry_price) if position_type == "LONG" \
               else ((entry_price - price) / entry_price)
         pnl_percent = round(pnl * 100, 2)
         new_balance = position_state["balance"] * (1 + pnl)
 
-        # 📝 Log trade outcome
+        # 📝 Log
         log_position({
-            "timestamp": timestamp,
             "entry_time": position_state["entry_time"],
             "signal": position_type,
             "entry_price": round(entry_price, 2),
             "exit_price": round(price, 2),
             "pnl_percent": pnl_percent,
-            "balance_after": round(new_balance, 2)
+            "balance_after": round(new_balance, 2),
+            "timestamp": timestamp
         })
 
         print(f"📤 Position CLOSED: {position_type} | PnL: {pnl_percent:.2f}%")
 
-        # Reset state & apply cooldown
+        # 🧹 Reset
         position_state.update({
             "is_open": False,
             "type": None,
