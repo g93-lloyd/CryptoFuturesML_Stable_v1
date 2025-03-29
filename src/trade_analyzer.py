@@ -18,8 +18,12 @@ def analyze_performance():
             print("⚠️ Trade log is empty or missing 'pnl_percent'.")
             return
 
+        # ✅ Safe datetime fallback
         if 'timestamp' not in df.columns:
-            df['timestamp'] = pd.to_datetime(df.get('entry_time', pd.Timestamp.now()))
+            if 'entry_time' in df.columns:
+                df['timestamp'] = pd.to_datetime(df['entry_time'], errors='coerce')
+            else:
+                df['timestamp'] = pd.Timestamp.now()
 
         wins = df[df["pnl_percent"] > 0]
         losses = df[df["pnl_percent"] < 0]
