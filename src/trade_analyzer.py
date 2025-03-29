@@ -14,17 +14,26 @@ def analyze_performance():
     try:
         df = pd.read_csv(TRADE_LOG_PATH)
 
-        if df.empty or len(df) < 2:
-            print("⚠️ Not enough trade data to analyze.")
+        # If df has no rows
+        if df.empty or df.shape[0] < 1:
+            print("⚠️ Trade log file is empty. No trades to analyze.")
             return
 
-        # Ensure timestamp column is datetime
-        if "timestamp" not in df.columns or "entry_time" not in df.columns:
-            print("⚠️ Required columns missing from trade log.")
+        # Check required columns
+        required_cols = {"timestamp", "entry_time", "signal", "entry_price", "exit_price", "pnl_percent", "balance_after"}
+        if not required_cols.issubset(df.columns):
+            print("⚠️ One or more required columns are missing from the trade log.")
             return
 
-        df["timestamp"] = pd.to_datetime(df["timestamp"])
-        df["entry_time"] = pd.to_datetime(df["entry_time"])
+        # Convert timestamp columns
+        df["timestamp"] = pd.to_datetime(df["timestamp"], errors='coerce')
+        df["entry_time"] = pd.to_datetime(df["entry_time"], errors='coerce')
+        df = df.dropna(subset=["timestamp", "entry_time"])  # Drop rows with invalid dates
+
+        # Still empty?
+        if df.empty:
+            print("⚠️ No valid trade data after cleaning timestamps.")
+            return
 
         wins = df[df["pnl_percent"] > 0]
         losses = df[df["pnl_percent"] < 0]
