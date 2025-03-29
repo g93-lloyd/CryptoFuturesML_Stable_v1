@@ -18,21 +18,25 @@ def analyze_performance():
             print("⚠️ Trade log is empty or missing 'pnl_percent'.")
             return
 
-        # ✅ Safe datetime fallback
+        # ✅ Handle datetime safely
         if 'timestamp' not in df.columns:
             if 'entry_time' in df.columns:
                 df['timestamp'] = pd.to_datetime(df['entry_time'], errors='coerce')
             else:
                 df['timestamp'] = pd.Timestamp.now()
 
+        # Clean missing/invalid timestamps
+        df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
+        df.dropna(subset=['timestamp'], inplace=True)
+
         wins = df[df["pnl_percent"] > 0]
         losses = df[df["pnl_percent"] < 0]
         total_trades = len(df)
         total_pnl = df["pnl_percent"].sum()
-        win_rate = len(wins) / total_trades * 100
+        win_rate = len(wins) / total_trades * 100 if total_trades > 0 else 0
         avg_win = wins["pnl_percent"].mean() if not wins.empty else 0
         avg_loss = losses["pnl_percent"].mean() if not losses.empty else 0
-        max_drawdown = df["pnl_percent"].min()
+        max_drawdown = df["pnl_percent"].min() if not df.empty else 0
 
         summary = f"""
 📊 Trade Performance Summary
@@ -49,7 +53,6 @@ def analyze_performance():
 
         print(summary)
 
-        # Save to log
         os.makedirs("logs", exist_ok=True)
         with open(SUMMARY_LOG_PATH, "w") as f:
             f.write(summary)
