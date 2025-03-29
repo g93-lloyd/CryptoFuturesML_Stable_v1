@@ -7,26 +7,34 @@ import time
 import functools
 import random
 
-# 🔍 Logs model prediction decisions for auditing or later analysis
+# ✅ Log prediction to confidence log (and optionally to prediction log)
 def log_prediction(signal, confidence, rsi, price, source="live"):
     os.makedirs("logs", exist_ok=True)
-    log_path = "logs/prediction_log.csv"
 
-    new_row = pd.DataFrame([{
+    row = {
         "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
         "signal": signal,
         "confidence": round(confidence, 4),
         "rsi": round(rsi, 2),
         "price": round(price, 2),
         "source": source
-    }])
+    }
 
-    if os.path.exists(log_path):
-        new_row.to_csv(log_path, mode="a", header=False, index=False)
+    # ✅ Confidence log (used for visualization)
+    conf_path = "logs/confidence_log.csv"
+    if os.path.exists(conf_path):
+        pd.DataFrame([row]).to_csv(conf_path, mode="a", header=False, index=False)
     else:
-        new_row.to_csv(log_path, index=False)
+        pd.DataFrame([row]).to_csv(conf_path, index=False)
 
-# 🛡️ Retry wrapper for resilient external calls (e.g., API or data fetches)
+    # ✅ Prediction log (optional extended logging)
+    pred_path = "logs/prediction_log.csv"
+    if os.path.exists(pred_path):
+        pd.DataFrame([row]).to_csv(pred_path, mode="a", header=False, index=False)
+    else:
+        pd.DataFrame([row]).to_csv(pred_path, index=False)
+
+# ✅ Retry wrapper for unstable functions (e.g., APIs)
 def retry(max_attempts=3, delay=2, backoff=2, jitter=True, logger=None):
     def decorator(func):
         @functools.wraps(func)
@@ -48,10 +56,29 @@ def retry(max_attempts=3, delay=2, backoff=2, jitter=True, logger=None):
         return wrapper
     return decorator
 
-# ✅ Ensures trade_log.csv exists with correct headers to prevent dashboard/analyzer crashes
-def ensure_trade_log_exists():
-    log_path = "logs/trade_log.csv"
-    if not os.path.exists(log_path):
-        os.makedirs("logs", exist_ok=True)
-        with open(log_path, "w") as f:
-            f.write("Time,Signal,Price,Action,PnL,Balance\n")
+# ✅ Safety check: verify model + scaler exist
+def model_artifacts_exist():
+    try:
+        # Check latest path tracker
+        model_tracker = "models/model_latest_path.txt"
+        if not os.path.exists(model_tracker):
+            print("❌ model_latest_path.txt not found.")
+            return False
+
+        with open(model_tracker, "r") as f:
+            model_path = f.read().strip()
+        if not os.path.exists(model_path):
+            print(f"❌ Model file not found: {model_path}")
+            return False
+
+        # Check at least one .save file exists for scaler
+        scaler_exists = any(fname.endswith(".save") for fname in os.listdir("models"))
+        if not scaler_exists:
+            print("❌ No scaler file found in models/")
+            return False
+
+        return True
+
+    except Exception as e:
+        print(f"❌ model_artifacts_exist check failed: {e}")
+        return False
