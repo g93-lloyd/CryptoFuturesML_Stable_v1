@@ -15,6 +15,7 @@ from src.market_data_collector import fetch_ohlcv             # Grabs latest OHL
 from src.position_manager import handle_signal                # Manages simulated trade entry/exit
 from src.cli_dashboard import display_dashboard               # Displays trading stats in terminal
 from src.utils import ensure_trade_log_exists                 # Ensures trade log file is initialized
+from src.confidence_visualizer import plot_confidence_chart
 
 # Interval between live loop cycles (in seconds) — 5 minutes = 300s
 INTERVAL_SECONDS = 300
@@ -62,6 +63,7 @@ def menu():
     print("3️⃣  Analyze Trade Log Performance")
     print("4️⃣  Start Full Automated Live Loop")
     print("5️⃣  Exit")
+    print("6️⃣  Visualize Confidence Over Time")
     return input("Select an option (1-5): ")
 
 # 🔄 Function to run in live loop mode (automated cycles)
@@ -108,6 +110,9 @@ def main():
         elif choice == '5':
             print("\n👋 Exiting. Goodbye!")
             sys.exit()
+        elif choice == '6':
+            plot_confidence_chart()
+
         else:
             print("❌ Invalid choice. Try again.")
 
