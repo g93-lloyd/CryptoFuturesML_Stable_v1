@@ -57,7 +57,7 @@ def main():
 
         elif choice == "2":
             print(f"\n🔁 Retraining model...\n")
-            run_retraining_pipeline()
+            retrain_pipeline()
 
         elif choice == "3":
             print(f"\n📊 Analyzing trade performance...\n")
