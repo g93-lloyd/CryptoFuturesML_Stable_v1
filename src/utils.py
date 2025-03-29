@@ -9,45 +9,23 @@ import random
 
 def log_prediction(signal, confidence, rsi, price, source="live"):
     os.makedirs("logs", exist_ok=True)
+    log_path = "logs/confidence_log.csv"
 
-    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-
-    # Unified log row
-    log_row = {
-        "timestamp": timestamp,
+    new_row = pd.DataFrame([{
+        "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
         "signal": signal,
         "confidence": round(confidence, 4),
         "rsi": round(rsi, 2),
         "price": round(price, 2),
         "source": source
-    }
+    }])
 
-    # ✅ Log to full prediction log
-    prediction_log_path = "logs/prediction_log.csv"
-    pd.DataFrame([log_row]).to_csv(
-        prediction_log_path,
-        mode="a" if os.path.exists(prediction_log_path) else "w",
-        header=not os.path.exists(prediction_log_path),
-        index=False
-    )
+    if os.path.exists(log_path):
+        new_row.to_csv(log_path, mode="a", header=False, index=False)
+    else:
+        new_row.to_csv(log_path, index=False)
 
-    # ✅ Log subset for confidence visualization
-    confidence_log_path = "logs/confidence_log.csv"
-    confidence_entry = {
-        "timestamp": timestamp,
-        "signal": signal,
-        "confidence": round(confidence, 4),
-        "rsi": round(rsi, 2),
-        "price": round(price, 2)
-    }
-    pd.DataFrame([confidence_entry]).to_csv(
-        confidence_log_path,
-        mode="a" if os.path.exists(confidence_log_path) else "w",
-        header=not os.path.exists(confidence_log_path),
-        index=False
-    )
-
-# Retry wrapper used elsewhere
+# ✅ Retry wrapper for fault-tolerant ops
 def retry(max_attempts=3, delay=2, backoff=2, jitter=True, logger=None):
     def decorator(func):
         @functools.wraps(func)
@@ -68,3 +46,24 @@ def retry(max_attempts=3, delay=2, backoff=2, jitter=True, logger=None):
                     current_delay *= backoff
         return wrapper
     return decorator
+
+# ✅ Model & Scaler Safety Check
+def model_artifacts_exist():
+    try:
+        model_path_file = "models/model_latest_path.txt"
+        if not os.path.exists(model_path_file):
+            print("❌ model_latest_path.txt not found.")
+            return False
+        with open(model_path_file, "r") as f:
+            model_path = f.read().strip()
+        if not os.path.exists(model_path):
+            print(f"❌ Model file not found at {model_path}")
+            return False
+        scalers = [f for f in os.listdir("models") if f.endswith(".save")]
+        if not scalers:
+            print("❌ No scaler file found.")
+            return False
+        return True
+    except Exception as e:
+        print(f"❌ Model artifact check failed: {e}")
+        return False
