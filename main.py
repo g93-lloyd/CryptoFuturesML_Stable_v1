@@ -42,18 +42,33 @@ def inject_test_virtual_trade_if_empty():
     if os.path.exists(log_path):
         df = pd.read_csv(log_path)
         if df.empty:
-            log_position({
-                "timestamp": datetime.utcnow(),
-                "entry_time": datetime.utcnow(),
-                "signal": "LONG",
-                "entry_price": 65000.0,
-                "exit_price": 65200.0,
-                "pnl_percent": 0.31,
-                "balance_after": 10310.0
-            })
-            print("🧪 Test trade injected to logs/virtual_positions.csv.")
+            now = datetime.utcnow()
+            test_rows = [
+                {
+                    "timestamp": now,
+                    "entry_time": now - timedelta(minutes=15),
+                    "signal": "LONG",
+                    "entry_price": 65000.0,
+                    "exit_price": 65200.0,
+                    "pnl_percent": 0.31,
+                    "balance_after": 10310.0
+                },
+                {
+                    "timestamp": now,
+                    "entry_time": now - timedelta(minutes=45),
+                    "signal": "SHORT",
+                    "entry_price": 65200.0,
+                    "exit_price": 64800.0,
+                    "pnl_percent": 0.61,
+                    "balance_after": 10938.0
+                }
+            ]
+            df = pd.DataFrame(test_rows)
+            df.to_csv(log_path, index=False)
+            print("🧪 2 test trades injected to logs/virtual_positions.csv.")
     else:
-        print("⚠️ Trade log file missing — unable to inject test trade.")
+        print("⚠️ Trade log file missing — unable to inject test trades.")
+
 
 # CLI Menu
 def menu():
