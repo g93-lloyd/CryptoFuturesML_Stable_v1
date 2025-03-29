@@ -8,22 +8,31 @@ import functools
 import random
 
 def log_prediction(signal, confidence, rsi, price, source="live"):
+    if signal not in ["LONG", "SHORT", "HOLD", "FILTERED"]:
+        print(f"⚠️ Invalid signal: {signal}. Not logging.")
+        return
+
     os.makedirs("logs", exist_ok=True)
     log_path = "logs/confidence_log.csv"
 
-    new_row = pd.DataFrame([{
-        "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
-        "signal": signal,
-        "confidence": round(confidence, 4),
-        "rsi": round(rsi, 2),
-        "price": round(price, 2),
-        "source": source
-    }])
+    try:
+        new_row = pd.DataFrame([{
+            "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+            "signal": signal,
+            "confidence": round(confidence, 4),
+            "rsi": round(rsi, 2),
+            "price": round(price, 2),
+            "source": source
+        }])
 
-    if os.path.exists(log_path):
-        new_row.to_csv(log_path, mode="a", header=False, index=False)
-    else:
-        new_row.to_csv(log_path, index=False)
+        if os.path.exists(log_path):
+            new_row.to_csv(log_path, mode="a", header=False, index=False)
+        else:
+            new_row.to_csv(log_path, index=False)
+
+    except Exception as e:
+        print(f"❌ Failed to log prediction: {e}")
+
 
 # ✅ Retry wrapper for fault-tolerant ops
 def retry(max_attempts=3, delay=2, backoff=2, jitter=True, logger=None):
