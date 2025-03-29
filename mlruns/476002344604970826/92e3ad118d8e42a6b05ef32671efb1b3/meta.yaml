@@ -1,0 +1,15 @@
+artifact_uri: file:///root/CryptoFuturesML_Stable_v1/mlruns/476002344604970826/92e3ad118d8e42a6b05ef32671efb1b3/artifacts
+end_time: 1743211526034
+entry_point_name: ''
+experiment_id: '476002344604970826'
+lifecycle_stage: active
+run_id: 92e3ad118d8e42a6b05ef32671efb1b3
+run_name: LSTM_Retrain
+run_uuid: 92e3ad118d8e42a6b05ef32671efb1b3
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1743211526013
+status: 3
+tags: []
+user_id: root

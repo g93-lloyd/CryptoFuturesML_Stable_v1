@@ -1,0 +1,11 @@
+
+📊 Trade Performance Summary
+────────────────────────────
+📈 Total Trades:       1
+💰 Total PnL (%):      1.15%
+🏆 Win Rate:           100.00%
+📊 Avg Win:            1.15%
+📉 Avg Loss:           0.00%
+🔻 Max Drawdown:       1.15%
+
+📝 Summary also saved to: logs/performance_summary.txt
